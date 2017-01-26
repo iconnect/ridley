@@ -1,0 +1,68 @@
+name:                scott
+version:             0.2.1.1
+synopsis:            Quick metrics to grow you app strong.
+description:         Please see README.md
+homepage:            https://github.com/iconnect/haskell-oss/scott#readme
+license:             BSD3
+license-file:        LICENSE
+author:              Alfredo Di Napoli
+maintainer:          alfredo@irisconnect.co.uk
+copyright:           2016 Alfredo Di Napoli
+category:            Web
+build-type:          Simple
+-- extra-source-files:
+cabal-version:       >=1.10
+
+library
+  hs-source-dirs:      src
+  include-dirs:        include
+  exposed-modules:     System.Metrics.Prometheus.Scott
+                       System.Metrics.Prometheus.Scott.Types
+                       System.Metrics.Prometheus.Scott.Metrics.Memory
+                       System.Metrics.Prometheus.Scott.Metrics.DiskUsage
+                       System.Metrics.Prometheus.Scott.Metrics.CPU
+                       System.Metrics.Prometheus.Scott.Metrics.Network
+                       System.Metrics.Prometheus.Scott.Metrics.Network.Types
+  build-depends:       async < 3.0.0,
+                       base >= 4.7 && < 5,
+                       containers < 0.6.0.0,
+                       katip < 0.4.0.0,
+                       wai-middleware-metrics < 0.3.0.0,
+                       template-haskell,
+                       ekg-core,
+                       time,
+                       text,
+                       mtl,
+                       transformers,
+                       prometheus,
+                       raw-strings-qq,
+                       microlens,
+                       microlens-th,
+                       process,
+                       ekg-prometheus-adapter >= 0.1.0.3,
+                       inline-c,
+                       vector,
+                       unix
+  c-sources:           src/System/Metrics/Prometheus/Scott/Metrics/CPU.c
+                       cbits/helpers.c
+  cc-options:          -Wall -std=c99
+  default-language:    Haskell2010
+  ghc-options:         -Wall -Werror
+  if os(darwin)
+    c-sources:         src/System/Metrics/Prometheus/Scott/Metrics/Network/MacOSX.c
+    other-modules:     System.Metrics.Prometheus.Scott.Metrics.Network.MacOSX
+  else
+    other-modules:     System.Metrics.Prometheus.Scott.Metrics.Network.Unix
+
+test-suite scott-test
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+  main-is:             Spec.hs
+  build-depends:       base
+                     , scott
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  default-language:    Haskell2010
+
+source-repository head
+  type:     git
+  location: https://github.com/iconnect/haskell-oss/scott

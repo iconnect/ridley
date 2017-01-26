@@ -1,0 +1,15 @@
+resolver: lts-7.4
+
+packages:
+- '.'
+- location:
+    git: git@github.com:adinapoli/ekg-prometheus-adapter
+    commit: "HEAD"
+
+extra-deps:
+  - prometheus-0.4.1
+  - katip-0.3.0.0
+
+flags: {}
+
+extra-package-dbs: []
