@@ -2,12 +2,12 @@ name:                scott
 version:             0.2.1.1
 synopsis:            Quick metrics to grow you app strong.
 description:         Please see README.md
-homepage:            https://github.com/iconnect/haskell-oss/scott#readme
+homepage:            https://github.com/iconnect/scott#readme
 license:             BSD3
 license-file:        LICENSE
-author:              Alfredo Di Napoli
+author:              Alfredo Di Napoli & the IRIS Connect Engineering Team
 maintainer:          alfredo@irisconnect.co.uk
-copyright:           2016 Alfredo Di Napoli
+copyright:           2017 IRIS Connect Ltd.
 category:            Web
 build-type:          Simple
 -- extra-source-files:

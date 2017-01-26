@@ -5,4 +5,4 @@ _"Quick metrics to grow your production app healthy & strong."_
 
 ## Scott
 
-Scott is a library which allow you to easily the most common Haskell metrics to [Prometheus](https://prometheus.io).
+Scott is a library which allow you to easily expose the most common Haskell metrics to [Prometheus](https://prometheus.io).
