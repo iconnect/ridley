@@ -10,7 +10,8 @@ maintainer:          alfredo@irisconnect.co.uk
 copyright:           2017 IRIS Connect Ltd.
 category:            Web
 build-type:          Simple
--- extra-source-files:
+data-files:
+  include/helpers.h
 cabal-version:       >=1.10
 
 library
