@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/iconnect/scott.svg?branch=master)](https://travis-ci.org/iconnect/scott)
+[![Build status](https://ci.appveyor.com/api/projects/status/ek7xds2smj3hm029/branch/master?svg=true)](https://ci.appveyor.com/project/engineerirngirisconnectcouk/scott/branch/master)
 
 _"Quick metrics to grow your production app healthy & strong."_
 
