@@ -1,13 +1,9 @@
-resolver: lts-7.4
-
+resolver: lts-6.5
+install-ghc: true
+flags: {}
 packages:
 - '.'
-
+system-ghc: false
 extra-deps:
   - ekg-prometheus-adapter-0.1.0.3
   - prometheus-0.4.1
-  - katip-0.3.0.0
-
-flags: {}
-
-extra-package-dbs: []
