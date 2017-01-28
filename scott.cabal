@@ -10,7 +10,8 @@ maintainer:          alfredo@irisconnect.co.uk
 copyright:           2017 IRIS Connect Ltd.
 category:            Web
 build-type:          Simple
--- extra-source-files:
+data-files:
+  include/helpers.h
 cabal-version:       >=1.10
 
 library
@@ -47,7 +48,7 @@ library
                        cbits/helpers.c
   cc-options:          -Wall -std=c99
   default-language:    Haskell2010
-  ghc-options:         -Wall -Werror
+  ghc-options:         -Wall
   if os(darwin)
     c-sources:         src/System/Metrics/Prometheus/Scott/Metrics/Network/MacOSX.c
     other-modules:     System.Metrics.Prometheus.Scott.Metrics.Network.MacOSX
