@@ -2,7 +2,7 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
-module System.Metrics.Prometheus.Scott.Metrics.DiskUsage (
+module System.Metrics.Prometheus.Ridley.Metrics.DiskUsage (
     getDiskStats
   , mkDiskGauge
   , diskUsageMetrics
@@ -18,7 +18,7 @@ import           Lens.Micro.TH
 import qualified System.Metrics.Prometheus.Metric.Gauge as P
 import qualified System.Metrics.Prometheus.MetricId as P
 import qualified System.Metrics.Prometheus.RegistryT as P
-import           System.Metrics.Prometheus.Scott.Types
+import           System.Metrics.Prometheus.Ridley.Types
 import           System.Process
 import           Text.Read
 
@@ -83,8 +83,8 @@ updateDiskUsageMetrics dmetrics flush = do
       Just m  -> updateDiskUsageMetric m d flush
 
 --------------------------------------------------------------------------------
-diskUsageMetrics :: DiskUsageMetrics -> ScottMetricHandler
-diskUsageMetrics g = ScottMetricHandler {
+diskUsageMetrics :: DiskUsageMetrics -> RidleyMetricHandler
+diskUsageMetrics g = RidleyMetricHandler {
     metric = g
   , updateMetric = updateDiskUsageMetrics
   , flush = False

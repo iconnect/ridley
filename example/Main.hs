@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-import           System.Metrics.Prometheus.Scott
+import           System.Metrics.Prometheus.Ridley
 import           Lens.Micro
 import           Web.Spock
 import           Web.Spock.Config
@@ -11,13 +11,13 @@ import           Katip
 import           System.IO
 import qualified Data.Text as T
 
-spockWeb :: ScottCtx -> IO ()
+spockWeb :: RidleyCtx -> IO ()
 spockWeb ctx = do
   spockCfg <- defaultSpockCfg () PCNoDatabase ()
   runSpock 8080 (spock spockCfg (app ctx))
 
 app ctx = do
-  case ctx ^. scottWaiMetrics of
+  case ctx ^. ridleyWaiMetrics of
     Nothing -> return ()
     Just m  -> middleware (metrics m)
   get root $ text "Hello World!"
@@ -26,8 +26,8 @@ app ctx = do
 main :: IO ()
 main = do
     stdoutS <- mkHandleScribe ColorIfTerminal stdout InfoS V2
-    let opts = newOptions [("service", "scott-test")] defaultMetrics
+    let opts = newOptions [("service", "ridley-test")] defaultMetrics
              & prometheusOptions . samplingFrequency .~ 5
              & dataRetentionPeriod .~ Just 60
-             & katipScribes .~ ("ScottTest", [("stdout", stdoutS)])
-    startScott opts ["metrics"] 8729 >>= spockWeb
+             & katipScribes .~ ("RidleyTest", [("stdout", stdoutS)])
+    startRidley opts ["metrics"] 8729 >>= spockWeb

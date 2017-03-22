@@ -4,22 +4,22 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE TemplateHaskell #-}
-module System.Metrics.Prometheus.Scott.Types (
-    ScottT(Scott)
-  , Scott
-  , runScott
-  , ScottCtx(ScottCtx)
-  , scottThreadId
-  , scottWaiMetrics
+module System.Metrics.Prometheus.Ridley.Types (
+    RidleyT(Ridley)
+  , Ridley
+  , runRidley
+  , RidleyCtx(RidleyCtx)
+  , ridleyThreadId
+  , ridleyWaiMetrics
   , Port
   , PrometheusOptions
-  , ScottMetric(..)
-  , ScottOptions
-  , ScottMetricHandler(..)
+  , RidleyMetric(..)
+  , RidleyOptions
+  , RidleyMetricHandler(..)
   , defaultMetrics
   , newOptions
   , prometheusOptions
-  , scottMetrics
+  , ridleyMetrics
   , katipScribes
   , katipSeverity
   , dataRetentionPeriod
@@ -46,7 +46,7 @@ type Port = Int
 type PrometheusOptions = AdapterOptions
 
 --------------------------------------------------------------------------------
-data ScottMetric = ProcessMemory
+data RidleyMetric = ProcessMemory
                  | CPULoad
                  | GHCConc
                  -- ^ Tap into the metrics exposed by GHC.Conc
@@ -57,9 +57,9 @@ data ScottMetric = ProcessMemory
                  deriving (Show, Ord, Eq, Enum, Bounded)
 
 --------------------------------------------------------------------------------
-data ScottOptions = ScottOptions {
+data RidleyOptions = RidleyOptions {
     _prometheusOptions :: PrometheusOptions
-  , _scottMetrics :: Set.Set ScottMetric
+  , _ridleyMetrics :: Set.Set RidleyMetric
   , _katipScribes :: (Katip.Namespace, [(T.Text, Katip.Scribe)])
   , _katipSeverity :: Katip.Severity
   , _dataRetentionPeriod :: Maybe NominalDiffTime
@@ -67,26 +67,26 @@ data ScottOptions = ScottOptions {
   -- Pass `Nothing` to not flush the metrics.
   }
 
-makeLenses ''ScottOptions
+makeLenses ''RidleyOptions
 
 --------------------------------------------------------------------------------
-defaultMetrics :: [ScottMetric]
+defaultMetrics :: [RidleyMetric]
 defaultMetrics = [minBound .. maxBound]
 
 --------------------------------------------------------------------------------
 newOptions :: [(T.Text, T.Text)]
-           -> [ScottMetric]
-           -> ScottOptions
-newOptions appLabels metrics = ScottOptions {
+           -> [RidleyMetric]
+           -> RidleyOptions
+newOptions appLabels metrics = RidleyOptions {
     _prometheusOptions = defaultOptions (P.fromList appLabels)
-  , _scottMetrics   = Set.fromList metrics
+  , _ridleyMetrics   = Set.fromList metrics
   , _katipSeverity  = InfoS
   , _katipScribes   = mempty
   , _dataRetentionPeriod = Nothing
   }
 
 --------------------------------------------------------------------------------
-data ScottMetricHandler = forall c. ScottMetricHandler {
+data RidleyMetricHandler = forall c. RidleyMetricHandler {
     metric       :: c
   , updateMetric :: c -> Bool -> IO ()
   , flush        :: !Bool
@@ -94,29 +94,29 @@ data ScottMetricHandler = forall c. ScottMetricHandler {
   }
 
 --------------------------------------------------------------------------------
-runHandler :: ScottMetricHandler -> IO ()
-runHandler (ScottMetricHandler m u f) = u m f
+runHandler :: RidleyMetricHandler -> IO ()
+runHandler (RidleyMetricHandler m u f) = u m f
 
 --------------------------------------------------------------------------------
-newtype ScottT t a = Scott { unScott :: ReaderT ScottOptions t a }
-  deriving (Functor, Applicative, Monad, MonadReader ScottOptions, MonadIO, MonadTrans)
+newtype RidleyT t a = Ridley { unRidley :: ReaderT RidleyOptions t a }
+  deriving (Functor, Applicative, Monad, MonadReader RidleyOptions, MonadIO, MonadTrans)
 
-type Scott = ScottT (P.RegistryT (KatipT IO))
+type Ridley = RidleyT (P.RegistryT (KatipT IO))
 
-data ScottCtx = ScottCtx {
-    _scottThreadId   :: ThreadId
-  , _scottWaiMetrics :: Maybe WaiMetrics
+data RidleyCtx = RidleyCtx {
+    _ridleyThreadId   :: ThreadId
+  , _ridleyWaiMetrics :: Maybe WaiMetrics
   }
 
-makeLenses ''ScottCtx
+makeLenses ''RidleyCtx
 
-instance Katip Scott where
-  getLogEnv = Scott $ lift (lift getLogEnv)
+instance Katip Ridley where
+  getLogEnv = Ridley $ lift (lift getLogEnv)
 
-instance KatipContext Scott where
+instance KatipContext Ridley where
   getKatipContext   = return mempty
-  getKatipNamespace = _logEnvApp <$> Scott (lift $ lift (getLogEnv))
+  getKatipNamespace = _logEnvApp <$> Ridley (lift $ lift (getLogEnv))
 
 --------------------------------------------------------------------------------
-runScott :: ScottOptions -> LogEnv -> Scott a -> IO a
-runScott opts le scott = (runReaderT $ unKatipT $ P.evalRegistryT $ (runReaderT $ unScott scott) opts) le
+runRidley :: RidleyOptions -> LogEnv -> Ridley a -> IO a
+runRidley opts le ridley = (runReaderT $ unKatipT $ P.evalRegistryT $ (runReaderT $ unRidley ridley) opts) le

@@ -5,8 +5,8 @@ module Main where
 
 import Control.Monad
 import Foreign.C.String
-import System.Metrics.Prometheus.Scott.Metrics.CPU
-import System.Metrics.Prometheus.Scott.Metrics.Network
+import System.Metrics.Prometheus.Ridley.Metrics.CPU
+import System.Metrics.Prometheus.Ridley.Metrics.Network
 
 doWork :: IO ()
 #if defined darwin_HOST_OS
