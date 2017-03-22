@@ -3,7 +3,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
-module System.Metrics.Prometheus.Scott.Metrics.Network.MacOSX
+module System.Metrics.Prometheus.Ridley.Metrics.Network.MacOSX
   ( networkMetrics
   , getNetworkMetrics
   , mkInterfaceGauge
@@ -24,8 +24,8 @@ import qualified Language.C.Inline as C
 import qualified System.Metrics.Prometheus.Metric.Gauge as P
 import qualified System.Metrics.Prometheus.MetricId as P
 import qualified System.Metrics.Prometheus.RegistryT as P
-import           System.Metrics.Prometheus.Scott.Metrics.Network.Types
-import           System.Metrics.Prometheus.Scott.Types
+import           System.Metrics.Prometheus.Ridley.Metrics.Network.Types
+import           System.Metrics.Prometheus.Ridley.Types
 import           Text.RawString.QQ (r)
 
 C.context (C.baseCtx <> C.vecCtx <> ifDataCtx)
@@ -41,32 +41,32 @@ C.include "<net/if.h>"
 
 
 C.verbatim [r|
-void set_scott_ifi_data(struct if_data* netData, scott_if_data_t* devStats) {
+void set_ridley_ifi_data(struct if_data* netData, ridley_if_data_t* devStats) {
 
   //devStats["receive_packets"] = convertFreeBSDCPUTime(uint64(netData.ifi_ipackets));
-  devStats->scott_ifi_ipackets = (long)(netData->ifi_ipackets);
+  devStats->ridley_ifi_ipackets = (long)(netData->ifi_ipackets);
 
   //devStats["transmit_packets"] = convertFreeBSDCPUTime(uint64(netData.ifi_opackets));
-  devStats->scott_ifi_opackets = (long)(netData->ifi_opackets);
+  devStats->ridley_ifi_opackets = (long)(netData->ifi_opackets);
 
   //devStats["receive_errs"] = convertFreeBSDCPUTime(uint64(netData.ifi_ierrors));
-  devStats->scott_ifi_ierrors = (long)(netData->ifi_ierrors);
+  devStats->ridley_ifi_ierrors = (long)(netData->ifi_ierrors);
 
   //devStats["transmit_errs"] = convertFreeBSDCPUTime(uint64(netData.ifi_oerrors));
-  devStats->scott_ifi_oerrors = (long)(netData->ifi_oerrors);
+  devStats->ridley_ifi_oerrors = (long)(netData->ifi_oerrors);
 
   //devStats["receive_bytes"] = convertFreeBSDCPUTime(uint64(netData.ifi_ibytes));
-  devStats->scott_ifi_ibytes  = (long)(netData->ifi_ibytes);
+  devStats->ridley_ifi_ibytes  = (long)(netData->ifi_ibytes);
 
   //devStats["transmit_bytes"] = convertFreeBSDCPUTime(uint64(netData.ifi_obytes));
-  devStats->scott_ifi_obytes  = (long)(netData->ifi_obytes);
+  devStats->ridley_ifi_obytes  = (long)(netData->ifi_obytes);
 
   //devStats["receive_multicast"] = convertFreeBSDCPUTime(uint64(netData.ifi_imcasts));
-  devStats->scott_ifi_imcasts  = (long)(netData->ifi_imcasts);
+  devStats->ridley_ifi_imcasts  = (long)(netData->ifi_imcasts);
   //devStats["transmit_multicast"] = convertFreeBSDCPUTime(uint64(netData.ifi_omcasts));
-  devStats->scott_ifi_omcasts  = (long)(netData->ifi_omcasts);
+  devStats->ridley_ifi_omcasts  = (long)(netData->ifi_omcasts);
   //devStats["receive_drop"] = convertFreeBSDCPUTime(uint64(netData.ifi_iqdrops));
-  devStats->scott_ifi_iqdrops = (long)(netData->ifi_iqdrops);
+  devStats->ridley_ifi_iqdrops = (long)(netData->ifi_iqdrops);
 
   //devStats["transmit_drop"] = convertFreeBSDCPUTime(uint64(netData.ifi_oqdrops));
   // Not present in this version of if_data
@@ -77,10 +77,10 @@ void set_scott_ifi_data(struct if_data* netData, scott_if_data_t* devStats) {
 getNetworkMetrics' :: IO (Ptr IfData, Ptr C.CInt)
 getNetworkMetrics' = do
   (totalInterfaces :: Ptr C.CInt) <- malloc
-  res <- [C.block| scott_if_data_t* {
+  res <- [C.block| ridley_if_data_t* {
         struct ifaddrs *ifap, *ifa;
         struct if_data *netData;
-        scott_if_data_t *netDev = malloc(30 * sizeof(scott_if_data_t));
+        ridley_if_data_t *netDev = malloc(30 * sizeof(ridley_if_data_t));
         int interfaceIdx = 0;
 
         // Compile a regex to ignore certain devices
@@ -90,12 +90,12 @@ getNetworkMetrics' = do
         ignoreDevice = regcomp(&regex, "^(ram|loop|fd|(h|s|v|xv)d[a-z]|nvme\\d+n\\d+p)\\d+$$", 0);
 
         if (ignoreDevice) {
-          netDev[0].scott_ifi_error = 1;
+          netDev[0].ridley_ifi_error = 1;
           return netDev;
         }
 
         if (getifaddrs(&ifap) == -1) {
-          netDev[0].scott_ifi_error = 1;
+          netDev[0].ridley_ifi_error = 1;
           return netDev;
         }
 
@@ -113,11 +113,11 @@ getNetworkMetrics' = do
                  regfree(&regex);
              }
 
-             scott_if_data_t *devStats = &netDev[interfaceIdx];
+             ridley_if_data_t *devStats = &netDev[interfaceIdx];
              netData = ifa->ifa_data;
-             devStats->scott_ifi_name = currentDevice;
-             set_scott_ifi_data(netData, devStats);
-             devStats->scott_ifi_error = 0;
+             devStats->ridley_ifi_name = currentDevice;
+             set_ridley_ifi_data(netData, devStats);
+             devStats->ridley_ifi_error = 0;
              interfaceIdx++;
 
           }
@@ -135,7 +135,7 @@ getNetworkMetrics = do
   (raw, total)  <- getNetworkMetrics'
   (CInt interfacesNum) <- peek total
   m   <- peekArray (fromIntegral interfacesNum) raw
-  let dtor = freeScottIFData raw (CInt interfacesNum)
+  let dtor = freeRidleyIFData raw (CInt interfacesNum)
   free total
   return (m, dtor)
 
@@ -166,8 +166,8 @@ updateNetworkMetrics nmetrics flush = do
 
 
 --------------------------------------------------------------------------------
-networkMetrics :: NetworkMetrics -> ScottMetricHandler
-networkMetrics g = ScottMetricHandler {
+networkMetrics :: NetworkMetrics -> RidleyMetricHandler
+networkMetrics g = RidleyMetricHandler {
     metric = g
   , updateMetric = updateNetworkMetrics
   , flush = False

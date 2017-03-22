@@ -1,10 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
-module System.Metrics.Prometheus.Scott.Metrics.Memory (
+module System.Metrics.Prometheus.Ridley.Metrics.Memory (
     processMemory
   ) where
 
 import qualified System.Metrics.Prometheus.Metric.Gauge as P
-import           System.Metrics.Prometheus.Scott.Types
+import           System.Metrics.Prometheus.Ridley.Types
 import           System.Posix.Process
 import           System.Process
 import           Text.Read
@@ -31,8 +31,8 @@ updateProcessMemory g _ = do
     Just m  -> P.set (fromIntegral m) g
 
 --------------------------------------------------------------------------------
-processMemory :: P.Gauge -> ScottMetricHandler
-processMemory g = ScottMetricHandler {
+processMemory :: P.Gauge -> RidleyMetricHandler
+processMemory g = RidleyMetricHandler {
     metric = g
   , updateMetric = updateProcessMemory
   , flush = False

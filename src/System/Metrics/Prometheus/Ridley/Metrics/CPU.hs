@@ -1,6 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
-module System.Metrics.Prometheus.Scott.Metrics.CPU
+module System.Metrics.Prometheus.Ridley.Metrics.CPU
   ( getLoadAvg
   , processCPULoad
   ) where
@@ -11,7 +11,7 @@ import qualified Data.Vector.Storable.Mutable as VM
 import           Foreign.C.Types
 import qualified Language.C.Inline as C
 import qualified System.Metrics.Prometheus.Metric.Gauge as P
-import           System.Metrics.Prometheus.Scott.Types
+import           System.Metrics.Prometheus.Ridley.Types
 
 C.context (C.baseCtx <> C.vecCtx)
 C.include "<stdlib.h>"
@@ -36,8 +36,8 @@ updateCPULoad (cpu1m, cpu5m, cpu15m) _ = do
     fromCDouble (CDouble d) = d
 
 --------------------------------------------------------------------------------
-processCPULoad :: (P.Gauge, P.Gauge, P.Gauge) -> ScottMetricHandler
-processCPULoad g = ScottMetricHandler {
+processCPULoad :: (P.Gauge, P.Gauge, P.Gauge) -> RidleyMetricHandler
+processCPULoad g = RidleyMetricHandler {
     metric = g
   , updateMetric = updateCPULoad
   , flush = False

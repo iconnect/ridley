@@ -1,7 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-module System.Metrics.Prometheus.Scott.Metrics.Network.Unix
+module System.Metrics.Prometheus.Ridley.Metrics.Network.Unix
   ( networkMetrics
   , getNetworkMetrics
   , mkInterfaceGauge
@@ -17,8 +17,8 @@ import           Prelude hiding (FilePath)
 import qualified System.Metrics.Prometheus.Metric.Gauge as P
 import qualified System.Metrics.Prometheus.MetricId as P
 import qualified System.Metrics.Prometheus.RegistryT as P
-import           System.Metrics.Prometheus.Scott.Metrics.Network.Types
-import           System.Metrics.Prometheus.Scott.Types
+import           System.Metrics.Prometheus.Ridley.Metrics.Network.Types
+import           System.Metrics.Prometheus.Ridley.Types
 
 --------------------------------------------------------------------------------
 -- | Parse /proc/net/dev to get the relevant stats.
@@ -69,8 +69,8 @@ updateNetworkMetrics nmetrics mustFlush = do
       Just m  -> updateNetworkMetric m d mustFlush
 
 --------------------------------------------------------------------------------
-networkMetrics :: NetworkMetrics -> ScottMetricHandler
-networkMetrics g = ScottMetricHandler {
+networkMetrics :: NetworkMetrics -> RidleyMetricHandler
+networkMetrics g = RidleyMetricHandler {
     metric = g
   , updateMetric = updateNetworkMetrics
   , flush = False

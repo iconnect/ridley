@@ -3,16 +3,16 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE CPP #-}
-module System.Metrics.Prometheus.Scott (
-    startScott
-  , startScottWithStore
+module System.Metrics.Prometheus.Ridley (
+    startRidley
+  , startRidleyWithStore
   -- * Handy re-exports
   , prometheusOptions
-  , scottMetrics
+  , ridleyMetrics
   , AdapterOptions(..)
-  , ScottCtx
-  , scottWaiMetrics
-  , scottThreadId
+  , RidleyCtx
+  , ridleyWaiMetrics
+  , ridleyThreadId
   , katipScribes
   , dataRetentionPeriod
   , samplingFrequency
@@ -43,25 +43,25 @@ import           System.Metrics as EKG
 import qualified System.Metrics.Prometheus.Concurrent.Http as P
 import           System.Metrics.Prometheus.Metric.Counter (add)
 import qualified System.Metrics.Prometheus.RegistryT as P
-import           System.Metrics.Prometheus.Scott.Metrics.CPU
-import           System.Metrics.Prometheus.Scott.Metrics.DiskUsage
-import           System.Metrics.Prometheus.Scott.Metrics.Memory
-import           System.Metrics.Prometheus.Scott.Metrics.Network
-import           System.Metrics.Prometheus.Scott.Types
+import           System.Metrics.Prometheus.Ridley.Metrics.CPU
+import           System.Metrics.Prometheus.Ridley.Metrics.DiskUsage
+import           System.Metrics.Prometheus.Ridley.Metrics.Memory
+import           System.Metrics.Prometheus.Ridley.Metrics.Network
+import           System.Metrics.Prometheus.Ridley.Types
 import           System.Remote.Monitoring.Prometheus
 
 --------------------------------------------------------------------------------
-startScott :: ScottOptions
-           -> P.Path
-           -> Port
-           -> IO ScottCtx
-startScott opts path port = do
+startRidley :: RidleyOptions
+            -> P.Path
+            -> Port
+            -> IO RidleyCtx
+startRidley opts path port = do
   store <- EKG.newStore
   EKG.registerGcMetrics store
-  startScottWithStore opts path port store
+  startRidleyWithStore opts path port store
 
 --------------------------------------------------------------------------------
-registerMetrics :: [ScottMetric] -> Scott [ScottMetricHandler]
+registerMetrics :: [RidleyMetric] -> Ridley [RidleyMetricHandler]
 registerMetrics [] = return []
 registerMetrics (x:xs) = do
   opts <- ask
@@ -110,20 +110,20 @@ registerMetrics (x:xs) = do
       (network :) <$> registerMetrics xs
 
 --------------------------------------------------------------------------------
-startScottWithStore :: ScottOptions
-                    -> P.Path
-                    -> Port
-                    -> EKG.Store
-                    -> IO ScottCtx
-startScottWithStore opts path port store = do
-  tid <- forkScott
-  mbMetr   <- case Set.member Wai (opts ^. scottMetrics) of
+startRidleyWithStore :: RidleyOptions
+                     -> P.Path
+                     -> Port
+                     -> EKG.Store
+                     -> IO RidleyCtx
+startRidleyWithStore opts path port store = do
+  tid <- forkRidley
+  mbMetr   <- case Set.member Wai (opts ^. ridleyMetrics) of
     False -> return Nothing
     True  -> Just <$> registerWaiMetrics store
 
-  return $ ScottCtx tid mbMetr
+  return $ RidleyCtx tid mbMetr
   where
-    forkScott = forkIO $ do
+    forkRidley = forkIO $ do
       x <- newEmptyMVar
       le <- initLogEnv (opts ^. katipScribes . _1) "production"
 
@@ -131,9 +131,9 @@ startScottWithStore opts path port store = do
       let le' = List.foldl' (\le0 (n,s) -> registerScribe n s le0) le (opts ^. katipScribes . _2)
 
       -- Start the server
-      serverLoop <- async $ runScott opts le' $ do
+      serverLoop <- async $ runRidley opts le' $ do
         lift $ registerEKGStore store (opts ^. prometheusOptions)
-        handlers <- registerMetrics (Set.toList $ opts ^. scottMetrics)
+        handlers <- registerMetrics (Set.toList $ opts ^. ridleyMetrics)
 
         liftIO $ do
           lastUpdate <- newIORef =<< getCurrentTime
@@ -150,7 +150,7 @@ startScottWithStore opts path port store = do
           $(logTM) ErrorS (fromString $ show e)
         Right _ -> return ()
 
-    handlersLoop :: IORef UTCTime -> [ScottMetricHandler] -> IO a
+    handlersLoop :: IORef UTCTime -> [RidleyMetricHandler] -> IO a
     handlersLoop lastUpdateRef handlers = do
       let freq = opts ^. prometheusOptions . samplingFrequency
       let flushPeriod = opts ^. dataRetentionPeriod
@@ -169,5 +169,5 @@ startScottWithStore opts path port store = do
       handlersLoop lastUpdateRef handlers
 
 --------------------------------------------------------------------------------
-updateHandlers :: [ScottMetricHandler] -> IO ()
+updateHandlers :: [RidleyMetricHandler] -> IO ()
 updateHandlers = mapM_ runHandler
