@@ -69,6 +69,9 @@ test-suite ridley-test
                      , containers
                      , microlens
                      , ekg-prometheus-adapter
+                     , text
+                     , string-conv
+                     , http-client
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
 
