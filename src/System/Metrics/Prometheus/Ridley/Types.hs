@@ -79,9 +79,9 @@ newOptions :: [(T.Text, T.Text)]
            -> RidleyOptions
 newOptions appLabels metrics = RidleyOptions {
     _prometheusOptions = defaultOptions (P.fromList appLabels)
-  , _ridleyMetrics   = Set.fromList metrics
-  , _katipSeverity  = InfoS
-  , _katipScribes   = mempty
+  , _ridleyMetrics     = Set.fromList metrics
+  , _katipSeverity     = InfoS
+  , _katipScribes      = mempty
   , _dataRetentionPeriod = Nothing
   }
 

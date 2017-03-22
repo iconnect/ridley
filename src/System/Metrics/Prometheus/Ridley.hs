@@ -52,9 +52,9 @@ import           System.Remote.Monitoring.Prometheus
 
 --------------------------------------------------------------------------------
 startRidley :: RidleyOptions
-           -> P.Path
-           -> Port
-           -> IO RidleyCtx
+            -> P.Path
+            -> Port
+            -> IO RidleyCtx
 startRidley opts path port = do
   store <- EKG.newStore
   EKG.registerGcMetrics store
@@ -111,10 +111,10 @@ registerMetrics (x:xs) = do
 
 --------------------------------------------------------------------------------
 startRidleyWithStore :: RidleyOptions
-                    -> P.Path
-                    -> Port
-                    -> EKG.Store
-                    -> IO RidleyCtx
+                     -> P.Path
+                     -> Port
+                     -> EKG.Store
+                     -> IO RidleyCtx
 startRidleyWithStore opts path port store = do
   tid <- forkRidley
   mbMetr   <- case Set.member Wai (opts ^. ridleyMetrics) of
