@@ -1,9 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE TupleSections #-}
 module Main where
 
 import           Control.Concurrent
+import           Control.Exception
 import           Control.Monad
+import           Data.ByteString.Lazy (ByteString)
 import           Data.List
 import qualified Data.Map.Strict as Map
 import           Data.Maybe (isJust)
@@ -48,12 +52,17 @@ containsMetric port key = containsMetrics port [key]
 
 --------------------------------------------------------------------------------
 containsMetrics :: Port -> [T.Text] -> Assertion
-containsMetrics port keys = do
-  request <- HTTP.parseRequest $ "http://localhost:" <> show port <> "/metrics"
-  response <- HTTP.httpLbs request ridleyManager
-  let haystack = toS $ HTTP.responseBody response
-  forM_ keys $ \key -> do
-    assertBool (T.unpack $ "Key " <> key <> " was not found in \"" <> haystack <> "\"") (key `T.isInfixOf` haystack)
+containsMetrics port keys = go 3
+  where
+    go !attempts = do
+      request  <- HTTP.parseRequest $ "http://localhost:" <> show port <> "/metrics"
+      (response :: Either SomeException (HTTP.Response ByteString)) <- try (HTTP.httpLbs request ridleyManager)
+      case response of
+        Left e -> if attempts <= 0 then throwIO e else threadDelay (2 * 10^6) >> go (attempts - 1)
+        Right res -> do
+          let haystack = toS $ HTTP.responseBody res
+          forM_ keys $ \key -> do
+            assertBool (T.unpack $ "Key " <> key <> " was not found in \"" <> haystack <> "\"") (key `T.isInfixOf` haystack)
 
 --------------------------------------------------------------------------------
 unitTests :: TestTree
