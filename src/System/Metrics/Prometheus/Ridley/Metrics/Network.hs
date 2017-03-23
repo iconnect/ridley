@@ -8,7 +8,7 @@ module System.Metrics.Prometheus.Ridley.Metrics.Network
   , IfData(..)
   ) where
 
-#if defined darwin_HOST_OS
+#ifdef darwin_HOST_OS
 import System.Metrics.Prometheus.Ridley.Metrics.Network.MacOSX
 #else
 import System.Metrics.Prometheus.Ridley.Metrics.Network.Unix

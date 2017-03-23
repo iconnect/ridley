@@ -9,7 +9,7 @@ import System.Metrics.Prometheus.Ridley.Metrics.CPU
 import System.Metrics.Prometheus.Ridley.Metrics.Network
 
 doWork :: IO ()
-#if defined darwin_HOST_OS
+#ifdef darwin_HOST_OS
 doWork = do
   (ifaces, dtor)  <- getNetworkMetrics
   forM_ ifaces $ \d@IfData{..} -> do

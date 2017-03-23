@@ -63,6 +63,7 @@ unitTests = testGroup "Unit tests"
         (getRegistry, _) <- setupFn
         r <- getRegistry >>= sample
         Map.null (unRegistrySample r) @?= True
+
   , withResource (startRidleyWith 8701 [Wai]) (\(_, ctx) -> killThread (ctx ^. ridleyThreadId)) $ \setupFn -> do
       testCase "Starting Ridley with wai metrics populates the store & ctx" $ do
         (getRegistry, ctx) <- setupFn
@@ -76,6 +77,7 @@ unitTests = testGroup "Unit tests"
                              , "# TYPE wai_response_status_4xx counter"
                              , "# TYPE wai_response_status_5xx counter"
                              ]
+
   , withResource (startRidleyWith 8702 [Network]) (\(_, ctx) -> killThread (ctx ^. ridleyThreadId)) $ \setupFn -> do
       testCase "Starting Ridley with network metrics populates the store" $ do
         (getRegistry, _) <- setupFn
@@ -89,4 +91,26 @@ unitTests = testGroup "Unit tests"
                              , "# TYPE network_transmit_multicast gauge"
                              , "# TYPE network_transmit_packets gauge"
                              ]
+
+  , withResource (startRidleyWith 8703 [ProcessMemory]) (\(_, ctx) -> killThread (ctx ^. ridleyThreadId)) $ \setupFn -> do
+      testCase "Starting Ridley with process memory metrics populates the store" $ do
+        (getRegistry, _) <- setupFn
+        containsMetrics 8703 ["# TYPE process_memory_kb gauge"]
+
+  , withResource (startRidleyWith 8706 [DiskUsage]) (\(_, ctx) -> killThread (ctx ^. ridleyThreadId)) $ \setupFn -> do
+      testCase "Starting Ridley with Disk Usage metrics populates the store" $ do
+        (getRegistry, _) <- setupFn
+        containsMetrics 8706 [ "# TYPE disk_free_bytes_blocks gauge"
+                             , "# TYPE disk_used_bytes_blocks gauge"
+                             ]
+
+  , withResource (startRidleyWith 8704 [CPULoad]) (\(_, ctx) -> killThread (ctx ^. ridleyThreadId)) $ \setupFn -> do
+      testCase "Starting Ridley with CPU Load metrics populates the store" $ do
+        (getRegistry, _) <- setupFn
+        containsMetrics 8704 [ "# TYPE cpu_load1 gauge"
+                             , "# TYPE cpu_load15 gauge"
+                             , "# TYPE cpu_load5 gauge"
+                             ]
+
+
   ]
