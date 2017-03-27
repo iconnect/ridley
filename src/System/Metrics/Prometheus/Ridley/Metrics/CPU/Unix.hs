@@ -1,23 +1,22 @@
-{-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE OverloadedStrings #-}
 module System.Metrics.Prometheus.Ridley.Metrics.CPU.Unix
   ( getLoadAvg
   , processCPULoad
   ) where
 
-import           Data.Monoid ((<>))
-import           Shelly
+import qualified Data.Text as T
 import           Data.Traversable
 import qualified Data.Vector as V
-import qualified Data.Text as T
+import           Shelly
 import qualified System.Metrics.Prometheus.Metric.Gauge as P
 import           System.Metrics.Prometheus.Ridley.Types
+import           Text.Read (readMaybe)
 
 --------------------------------------------------------------------------------
 getLoadAvg :: IO (V.Vector Double)
 getLoadAvg = do
   rawOutput <- shelly $ silently $ take 3 . T.lines . T.strip <$> run "cat" ["/proc/loadavg"]
-  let loads = case traverse (readMaybe . T.unpack) of
+  let loads = case traverse (readMaybe . T.unpack) rawOutput of
                 Just [a,b,c] -> [a,b,c]
                 Nothing      -> [-1.0, -1.0, -1.0]
   return $ V.fromList loads
