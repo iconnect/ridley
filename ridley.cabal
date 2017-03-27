@@ -39,6 +39,7 @@ library
                        time,
                        text,
                        mtl,
+                       shelly,
                        transformers,
                        prometheus,
                        raw-strings-qq,
