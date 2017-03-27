@@ -50,8 +50,7 @@ library
                        inline-c,
                        vector,
                        unix
-  c-sources:           src/System/Metrics/Prometheus/Ridley/Metrics/CPU/Darwin.c
-                       cbits/helpers.c
+  c-sources:           cbits/helpers.c
   cc-options:          -Wall -std=c99
   default-language:    Haskell2010
   ghc-options:         -Wall
@@ -59,6 +58,7 @@ library
     ghc-options: -Wall -Werror
   if os(darwin)
     c-sources:         src/System/Metrics/Prometheus/Ridley/Metrics/Network/Darwin.c
+                       src/System/Metrics/Prometheus/Ridley/Metrics/CPU/Darwin.c
     other-modules:     System.Metrics.Prometheus.Ridley.Metrics.Network.Darwin
                        System.Metrics.Prometheus.Ridley.Metrics.CPU.Darwin
   else
