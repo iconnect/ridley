@@ -9,7 +9,7 @@ module System.Metrics.Prometheus.Ridley.Metrics.Network
   ) where
 
 #ifdef darwin_HOST_OS
-import System.Metrics.Prometheus.Ridley.Metrics.Network.MacOSX
+import System.Metrics.Prometheus.Ridley.Metrics.Network.Darwin
 #else
 import System.Metrics.Prometheus.Ridley.Metrics.Network.Unix
 #endif

@@ -3,7 +3,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
-module System.Metrics.Prometheus.Ridley.Metrics.Network.MacOSX
+module System.Metrics.Prometheus.Ridley.Metrics.Network.Darwin
   ( networkMetrics
   , getNetworkMetrics
   , mkInterfaceGauge
