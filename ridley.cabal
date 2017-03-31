@@ -14,6 +14,10 @@ data-files:
   include/helpers.h
 cabal-version:       >=1.10
 
+flag lib-Werror
+     default: False
+     description: Enable -Werror
+
 library
   hs-source-dirs:      src
   include-dirs:        include
@@ -24,6 +28,7 @@ library
                        System.Metrics.Prometheus.Ridley.Metrics.CPU
                        System.Metrics.Prometheus.Ridley.Metrics.Network
                        System.Metrics.Prometheus.Ridley.Metrics.Network.Types
+
   build-depends:       async < 3.0.0,
                        base >= 4.7 && < 5,
                        containers < 0.6.0.0,
@@ -34,6 +39,7 @@ library
                        time,
                        text,
                        mtl,
+                       shelly,
                        transformers,
                        prometheus,
                        raw-strings-qq,
@@ -44,22 +50,27 @@ library
                        inline-c,
                        vector,
                        unix
-  c-sources:           src/System/Metrics/Prometheus/Ridley/Metrics/CPU.c
-                       cbits/helpers.c
+  c-sources:           cbits/helpers.c
   cc-options:          -Wall -std=c99
   default-language:    Haskell2010
   ghc-options:         -Wall
+  if flag(lib-Werror)
+    ghc-options: -Wall -Werror
   if os(darwin)
-    c-sources:         src/System/Metrics/Prometheus/Ridley/Metrics/Network/MacOSX.c
-    other-modules:     System.Metrics.Prometheus.Ridley.Metrics.Network.MacOSX
+    c-sources:         src/System/Metrics/Prometheus/Ridley/Metrics/Network/Darwin.c
+                       src/System/Metrics/Prometheus/Ridley/Metrics/CPU/Darwin.c
+    other-modules:     System.Metrics.Prometheus.Ridley.Metrics.Network.Darwin
+                       System.Metrics.Prometheus.Ridley.Metrics.CPU.Darwin
   else
     other-modules:     System.Metrics.Prometheus.Ridley.Metrics.Network.Unix
+                       System.Metrics.Prometheus.Ridley.Metrics.CPU.Unix
 
 test-suite ridley-test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
   main-is:             Spec.hs
   build-depends:       base
+                     , bytestring
                      , ridley
                      , tasty
                      , tasty-hunit
@@ -69,6 +80,9 @@ test-suite ridley-test
                      , containers
                      , microlens
                      , ekg-prometheus-adapter
+                     , text
+                     , string-conv
+                     , http-client >= 0.4.30
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
 

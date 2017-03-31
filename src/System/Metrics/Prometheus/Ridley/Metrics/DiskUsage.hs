@@ -51,7 +51,7 @@ getDiskStats = do
   where
     mkDiskStats :: T.Text -> Maybe DiskStats
     mkDiskStats rawLine = case T.words rawLine of
-#if defined darwin_HOST_OS
+#ifdef darwin_HOST_OS
      [fs,_, used,free,_,_,_,_,_] -> DiskStats <$> pure fs
                                               <*> readMaybe (T.unpack used)
                                               <*> readMaybe (T.unpack free)

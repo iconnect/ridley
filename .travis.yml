@@ -153,7 +153,6 @@ script:
       for dir in $PACKAGES
       do
         cd $dir
-        cabal check || [ "$CABALVER" == "1.16" ]
         cabal sdist
         PKGVER=$(cabal info . | awk '{print $2;exit}')
         SRC_TGZ=$PKGVER.tar.gz
@@ -167,6 +166,6 @@ script:
       ;;
   esac
   set +ex
-# after_script:
-#   - travis_retry curl -L https://github.com/rubik/stack-hpc-coveralls/releases/download/v0.0.4.0/shc-linux-x64-$GHCVER.tar.bz2 | tar -xj
-#   - ./shc rncryptor rncryptor-tests
+after_script:
+  - travis_retry curl -L https://github.com/rubik/stack-hpc-coveralls/releases/download/v0.0.4.0/shc-linux-x64-$GHCVER.tar.bz2 | tar -xj
+  - ./shc ridley ridley-test

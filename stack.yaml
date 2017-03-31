@@ -8,6 +8,8 @@ extra-deps:
   - prometheus-0.4.1
   - katip-0.3.0.0
 
-flags: {}
+flags:
+  ridley:
+    lib-Werror: true
 
 extra-package-dbs: []

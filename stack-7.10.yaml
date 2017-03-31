@@ -7,3 +7,4 @@ system-ghc: false
 extra-deps:
   - ekg-prometheus-adapter-0.1.0.3
   - prometheus-0.4.1
+  - http-client-0.4.30

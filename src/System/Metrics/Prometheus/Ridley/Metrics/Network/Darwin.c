@@ -50,7 +50,7 @@ void set_ridley_ifi_data(struct if_data* netData, ridley_if_data_t* devStats) {
 }
 
 
-ridley_if_data_t * inline_c_System_Metrics_Prometheus_Ridley_Metrics_Network_MacOSX_0_ef41cfb6dc39c2d642dd88d273ce5058cea8099d(int * totalInterfaces_inline_c_0) {
+ridley_if_data_t * inline_c_System_Metrics_Prometheus_Ridley_Metrics_Network_Darwin_0_ef41cfb6dc39c2d642dd88d273ce5058cea8099d(int * totalInterfaces_inline_c_0) {
 
         struct ifaddrs *ifap, *ifa;
         struct if_data *netData;

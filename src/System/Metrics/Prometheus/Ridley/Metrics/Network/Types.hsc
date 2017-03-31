@@ -25,7 +25,7 @@ import qualified System.Metrics.Prometheus.Metric.Gauge as P
 #include "helpers.h"
 
 data IfData = IfData {
-#if defined darwin_HOST_OS
+#ifdef darwin_HOST_OS
     ifi_ipackets :: {-# UNPACK #-} !CUInt
   , ifi_opackets :: {-# UNPACK #-} !CUInt
   , ifi_ierrors  :: {-# UNPACK #-} !CUInt
@@ -53,7 +53,7 @@ data IfData = IfData {
   } deriving Show
 
 
-#if defined darwin_HOST_OS
+#ifdef darwin_HOST_OS
 foreign import ccall "helpers.h free_ridley_if_data"
   freeRidleyIFData :: Ptr IfData -> CInt -> IO ()
 
