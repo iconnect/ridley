@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/iconnect/scott.svg?branch=master)](https://travis-ci.org/iconnect/scott)
+[![Build Status](https://travis-ci.org/iconnect/ridley.svg?branch=master)](https://travis-ci.org/iconnect/ridley)
 [![Build status](https://ci.appveyor.com/api/projects/status/ek7xds2smj3hm029/branch/master?svg=true)](https://ci.appveyor.com/project/engineerirngirisconnectcouk/scott/branch/master)
 [![Coverage](https://coveralls.io/repos/github/iconnect/ridley/badge.svg?branch=master)](https://coveralls.io/github/iconnect/ridley?branch=master)
 
