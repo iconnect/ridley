@@ -5,6 +5,8 @@ module System.Metrics.Prometheus.Ridley.Metrics.CPU.Unix
   , processCPULoad
   ) where
 
+import           Control.Applicative ((<|>))
+import           Data.Maybe (fromJust)
 import qualified Data.Text as T
 import           Data.Traversable
 import qualified Data.Vector as V
@@ -16,11 +18,19 @@ import           Text.Read (readMaybe)
 --------------------------------------------------------------------------------
 getLoadAvg :: IO (V.Vector Double)
 getLoadAvg = do
-  rawOutput <- shelly $ silently $ take 3 . T.lines . T.strip <$> run "cat" ["/proc/loadavg"]
-  let loads = case traverse (readMaybe . T.unpack) rawOutput of
-                Just [a,b,c] -> [a,b,c]
-                _            -> [-1.0, -1.0, -1.0]
-  return $ V.fromList loads
+  rawOutput <- shelly $ silently $ T.strip <$> run "cat" ["/proc/loadavg"]
+  let standardFormat = case traverse (readMaybe . T.unpack) (take 3 . T.lines $ rawOutput) of
+                         Just [a,b,c] -> Just [a,b,c]
+                         _            -> Nothing
+
+  -- See: https://github.com/iconnect/ridley/issues/8
+  let alternativeFormat = case traverse (readMaybe . T.unpack) (take 3 . T.splitOn " " $ rawOutput) of
+                         Just [a,b,c] -> Just [a,b,c]
+                         _            -> Nothing
+
+  return . V.fromList . fromJust $ standardFormat <|> alternativeFormat <|> Just noAvgInfo
+  where
+    noAvgInfo = [-1.0, -1.0, -1.0]
 
 --------------------------------------------------------------------------------
 -- | As we have 3 gauges, it makes no sense flushing them.
