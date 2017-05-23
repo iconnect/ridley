@@ -31,6 +31,7 @@ import           Control.Monad.IO.Class
 import           Control.Monad.Reader (MonadReader)
 import           Control.Monad.Trans.Class
 import           Control.Monad.Trans.Reader
+import           Data.Monoid
 import qualified Data.Set as Set
 import qualified Data.Text as T
 import           Data.Time
@@ -46,15 +47,86 @@ type Port = Int
 type PrometheusOptions = AdapterOptions
 
 --------------------------------------------------------------------------------
+data RidleyMetricHandler = forall c. RidleyMetricHandler {
+    metric       :: c
+  , updateMetric :: c -> Bool -> IO ()
+  , flush        :: !Bool
+  -- ^Whether or net to flush this Metric
+  }
+
+--------------------------------------------------------------------------------
 data RidleyMetric = ProcessMemory
-                 | CPULoad
-                 | GHCConc
-                 -- ^ Tap into the metrics exposed by GHC.Conc
-                 | Network
-                 | Wai
-                 | DiskUsage
-                 -- ^ Gets stats about Disk usage (free space, etc)
-                 deriving (Show, Ord, Eq, Enum, Bounded)
+                  | CPULoad
+                  | GHCConc
+                  -- ^ Tap into the metrics exposed by GHC.Conc
+                  | Network
+                  | Wai
+                  | DiskUsage
+                  -- ^ Gets stats about Disk usage (free space, etc)
+                  | CustomMetric T.Text RidleyMetricHandler
+                  -- ^ A user-defined metric, identified by a name.
+
+instance Show RidleyMetric where
+  show ProcessMemory         = "ProcessMemory"
+  show CPULoad               = "CPULoad"
+  show GHCConc               = "GHCConc"
+  show Network               = "Network"
+  show Wai                   = "Wai"
+  show DiskUsage             = "DiskUsage"
+  show (CustomMetric name _) = "Custom@" <> T.unpack name
+
+instance Eq RidleyMetric where
+  (==) ProcessMemory ProcessMemory             = True
+  (==) CPULoad CPULoad                         = True
+  (==) GHCConc GHCConc                         = True
+  (==) Network Network                         = True
+  (==) Wai     Wai                             = True
+  (==) DiskUsage DiskUsage                     = True
+  (==) (CustomMetric n1 _) (CustomMetric n2 _) = (==) n1 n2
+  (==) _ _                                     = False
+
+instance Ord RidleyMetric where
+  compare ProcessMemory xs = case xs of
+    ProcessMemory          -> EQ
+    _                      -> GT
+  compare CPULoad xs       = case xs of
+    ProcessMemory          -> LT
+    CPULoad                -> EQ
+    _                      -> GT
+  compare GHCConc xs       = case xs of
+    ProcessMemory          -> LT
+    CPULoad                -> LT
+    GHCConc                -> EQ
+    _                      -> GT
+  compare Network xs       = case xs of
+    ProcessMemory          -> LT
+    CPULoad                -> LT
+    GHCConc                -> LT
+    Network                -> EQ
+    _                      -> GT
+  compare Wai     xs       = case xs of
+    ProcessMemory          -> LT
+    CPULoad                -> LT
+    GHCConc                -> LT
+    Network                -> LT
+    Wai                    -> EQ
+    _                      -> GT
+  compare DiskUsage xs     = case xs of
+    ProcessMemory          -> LT
+    CPULoad                -> LT
+    GHCConc                -> LT
+    Network                -> LT
+    Wai                    -> LT
+    DiskUsage              -> EQ
+    _                      -> GT
+  compare (CustomMetric n1 _) xs = case xs of
+    ProcessMemory          -> LT
+    CPULoad                -> LT
+    GHCConc                -> LT
+    Network                -> LT
+    Wai                    -> LT
+    DiskUsage              -> LT
+    (CustomMetric n2 _)    -> compare n1 n2
 
 --------------------------------------------------------------------------------
 data RidleyOptions = RidleyOptions {
@@ -71,7 +143,7 @@ makeLenses ''RidleyOptions
 
 --------------------------------------------------------------------------------
 defaultMetrics :: [RidleyMetric]
-defaultMetrics = [minBound .. maxBound]
+defaultMetrics = [ProcessMemory, CPULoad, GHCConc, Network, Wai, DiskUsage]
 
 --------------------------------------------------------------------------------
 newOptions :: [(T.Text, T.Text)]
@@ -83,14 +155,6 @@ newOptions appLabels metrics = RidleyOptions {
   , _katipSeverity     = InfoS
   , _katipScribes      = mempty
   , _dataRetentionPeriod = Nothing
-  }
-
---------------------------------------------------------------------------------
-data RidleyMetricHandler = forall c. RidleyMetricHandler {
-    metric       :: c
-  , updateMetric :: c -> Bool -> IO ()
-  , flush        :: !Bool
-  -- ^Whether or net to flush this Metric
   }
 
 --------------------------------------------------------------------------------

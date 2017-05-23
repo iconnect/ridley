@@ -32,8 +32,10 @@ import           Control.Monad.Trans.Class (lift)
 import           Data.IORef
 import qualified Data.List as List
 import           Data.Map.Strict as M
+import           Data.Monoid ((<>))
 import qualified Data.Set as Set
 import           Data.String
+import qualified Data.Text as T
 import           Data.Time
 import           GHC.Conc (getNumCapabilities, getNumProcessors)
 import           Katip
@@ -68,6 +70,9 @@ registerMetrics (x:xs) = do
   let popts = opts ^. prometheusOptions
   let sev   = opts ^. katipSeverity
   case x of
+    CustomMetric metricName custom -> do
+      $(logTM) sev $ "Registering CustomMetric '" <> fromString (T.unpack metricName) <> "'..."
+      (custom :) <$> (registerMetrics xs)
     ProcessMemory -> do
       processReservedMemory <- lift $ P.registerGauge "process_memory_kb" (popts ^. labels)
       let !m = processMemory processReservedMemory
