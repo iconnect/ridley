@@ -4,4 +4,4 @@ A collection of useful `CustomMetric` which don't belong to the main `ridley` pa
 
 ## What's included
 
-* (Linux-only) Monitor open file descriptors;
+* Monitor open file descriptors;

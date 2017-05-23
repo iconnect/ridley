@@ -71,8 +71,9 @@ registerMetrics (x:xs) = do
   let sev   = opts ^. katipSeverity
   case x of
     CustomMetric metricName custom -> do
+      customMetric <- lift (custom opts)
       $(logTM) sev $ "Registering CustomMetric '" <> fromString (T.unpack metricName) <> "'..."
-      (custom :) <$> (registerMetrics xs)
+      (customMetric :) <$> (registerMetrics xs)
     ProcessMemory -> do
       processReservedMemory <- lift $ P.registerGauge "process_memory_kb" (popts ^. labels)
       let !m = processMemory processReservedMemory

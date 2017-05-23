@@ -2,8 +2,7 @@
 {-# LANGUAGE CPP #-}
 module System.Metrics.Prometheus.Ridley.Metrics.FD where
 
-import           Control.Monad.Reader (ask)
-import           Control.Monad.Trans.Class (lift)
+import           Control.Monad.IO.Class
 import           Data.Maybe (fromMaybe)
 import           Data.Monoid
 import qualified Data.Text as T
@@ -17,8 +16,8 @@ import           System.Remote.Monitoring.Prometheus (labels)
 import           Text.Read (readMaybe)
 
 --------------------------------------------------------------------------------
-getOpenFD :: ProcessID -> IO Double
-getOpenFD pid = do
+getOpenFD_unix :: ProcessID -> IO Double
+getOpenFD_unix pid = do
   rawOutput <- shelly $ silently $ escaping False $
     T.strip <$> run "ls" ["-l", "/proc/" <> T.pack (show pid) <> "/fd", "|"
                          ,"wc", "-l"
@@ -26,22 +25,33 @@ getOpenFD pid = do
   return $ fromMaybe 0.0 (readMaybe . T.unpack $ rawOutput)
 
 --------------------------------------------------------------------------------
+getOpenFD_darwin :: ProcessID -> IO Double
+getOpenFD_darwin pid = do
+  rawOutput <- shelly $ silently $ escaping False $
+    T.strip <$> run "lsof" ["-p", T.pack (show pid), "|"
+                           ,"wc", "-l"
+                           ]
+  return $ fromMaybe 0.0 (readMaybe . T.unpack $ rawOutput)
+
+--------------------------------------------------------------------------------
 updateOpenFD :: ProcessID -> P.Gauge -> Bool -> IO ()
 updateOpenFD pid gauge _ = do
 #ifdef darwin_HOST_OS
-  openFd <- return 0
+  openFd <- getOpenFD_darwin pid
 #else
-  openFd <- getOpenFD pid
+  openFd <- getOpenFD_unix pid
 #endif
   P.set openFd gauge
 
 --------------------------------------------------------------------------------
 -- | Monitors the number of open file descriptors for a given `ProcessID`.
-processOpenFD :: ProcessID -> Ridley RidleyMetricHandler
-processOpenFD pid = do
-  opts <- ask
+processOpenFD :: MonadIO m
+              => ProcessID
+              -> RidleyOptions
+              -> P.RegistryT m RidleyMetricHandler
+processOpenFD pid opts = do
   let popts = opts ^. prometheusOptions
-  openFD <- lift $ P.registerGauge "process_open_fd" (popts ^. labels)
+  openFD <- P.registerGauge "process_open_fd" (popts ^. labels)
   return RidleyMetricHandler {
     metric = openFD
   , updateMetric = updateOpenFD pid

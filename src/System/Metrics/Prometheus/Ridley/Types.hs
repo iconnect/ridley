@@ -1,4 +1,5 @@
 {-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -63,7 +64,7 @@ data RidleyMetric = ProcessMemory
                   | Wai
                   | DiskUsage
                   -- ^ Gets stats about Disk usage (free space, etc)
-                  | CustomMetric T.Text RidleyMetricHandler
+                  | CustomMetric T.Text (forall m. MonadIO m => RidleyOptions -> P.RegistryT m RidleyMetricHandler)
                   -- ^ A user-defined metric, identified by a name.
 
 instance Show RidleyMetric where
