@@ -1,5 +1,5 @@
 name:                ridley
-version:             0.3.0.0
+version:             0.3.1.0
 synopsis:            Quick metrics to grow you app strong.
 description:         Please see README.md
 homepage:            https://github.com/iconnect/ridley#readme
@@ -46,6 +46,7 @@ library
                        microlens,
                        microlens-th,
                        process,
+                       string-conv,
                        ekg-prometheus-adapter >= 0.1.0.3,
                        inline-c,
                        vector,
