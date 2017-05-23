@@ -1,0 +1,16 @@
+resolver: lts-7.4
+
+packages:
+- '.'
+- '..'
+
+extra-deps:
+  - ekg-prometheus-adapter-0.1.0.3
+  - prometheus-0.4.1
+  - katip-0.3.0.0
+
+flags:
+  ridley-extras:
+    lib-Werror: true
+
+extra-package-dbs: []
