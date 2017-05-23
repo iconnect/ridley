@@ -1,8 +1,8 @@
 name:                ridley-extras
 version:             0.1.0.0
--- synopsis:
+synopsis:            Handy metrics that doesn't belong to ridley.
 -- description:
-homepage:            https://github.com/githubuser/ridley-extras#readme
+homepage:            https://github.com/iconnect/ridley/ridley-extras#readme
 license:             BSD3
 license-file:        LICENSE
 author:              Author name here
