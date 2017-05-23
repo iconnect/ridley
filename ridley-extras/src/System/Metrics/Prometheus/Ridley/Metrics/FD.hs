@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE CPP #-}
 module System.Metrics.Prometheus.Ridley.Metrics.FD where
 
 import           Control.Monad.Reader (ask)
@@ -27,7 +28,11 @@ getOpenFD pid = do
 --------------------------------------------------------------------------------
 updateOpenFD :: ProcessID -> P.Gauge -> Bool -> IO ()
 updateOpenFD pid gauge _ = do
+#ifdef darwin_HOST_OS
+  openFd <- return 0
+#else
   openFd <- getOpenFD pid
+#endif
   P.set openFd gauge
 
 --------------------------------------------------------------------------------
