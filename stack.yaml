@@ -1,7 +1,8 @@
 resolver: lts-7.4
 
 packages:
-- '.'
+- 'ridley'
+- 'ridley-extras'
 
 extra-deps:
   - ekg-prometheus-adapter-0.1.0.3
