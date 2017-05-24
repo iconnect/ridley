@@ -2,7 +2,6 @@ resolver: lts-7.4
 
 packages:
 - '.'
-- '../ridley'
 
 extra-deps:
   - ekg-prometheus-adapter-0.1.0.3
@@ -10,7 +9,7 @@ extra-deps:
   - katip-0.3.0.0
 
 flags:
-  ridley-extras:
+  ridley:
     lib-Werror: true
 
 extra-package-dbs: []

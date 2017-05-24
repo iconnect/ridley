@@ -2,8 +2,7 @@ resolver: lts-6.5
 install-ghc: true
 flags: {}
 packages:
-- 'ridley'
-- 'ridley-extras'
+- '.'
 system-ghc: false
 extra-deps:
   - ekg-prometheus-adapter-0.1.0.3
