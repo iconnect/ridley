@@ -1,19 +1,20 @@
 name:                ridley-extras
-version:             0.1.0.0
-synopsis:            Handy metrics that doesn't belong to ridley.
--- description:
+version:             0.1.0.1
+synopsis:            Handy metrics that don't belong to ridley.
+description:         See README.md
 homepage:            https://github.com/iconnect/ridley/ridley-extras#readme
 license:             BSD3
 license-file:        LICENSE
-author:              Author name here
-maintainer:          example@example.com
-copyright:           2017 Author name here
+author:              Alfredo Di Napoli
+maintainer:          alfredo@irisconnect.co.uk
+copyright:           2017 Alfredo Di Napoli & IRIS Connect Engineering Team
 category:            Web
 build-type:          Simple
 extra-source-files:  README.md
 cabal-version:       >=1.10
 
 flag lib-Werror
+     manual: True
      default: False
      description: Enable -Werror
 
@@ -44,4 +45,4 @@ test-suite ridley-extras-test
 
 source-repository head
   type:     git
-  location: https://github.com/githubuser/ridley-extras
+  location: https://github.com/iconnect/ridley

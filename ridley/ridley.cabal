@@ -1,8 +1,8 @@
 name:                ridley
-version:             0.3.1.1
-synopsis:            Quick metrics to grow you app strong.
+version:             0.3.1.2
+synopsis:            Quick metrics to grow your app strong.
 description:         Please see README.md
-homepage:            https://github.com/iconnect/ridley#readme
+homepage:            https://github.com/iconnect/ridley#README
 license:             BSD3
 license-file:        LICENSE
 author:              Alfredo Di Napoli & the IRIS Connect Engineering Team
@@ -15,6 +15,7 @@ data-files:
 cabal-version:       >=1.10
 
 flag lib-Werror
+     manual: True
      default: False
      description: Enable -Werror
 
@@ -54,7 +55,6 @@ library
   c-sources:           cbits/helpers.c
   cc-options:          -Wall -std=c99
   default-language:    Haskell2010
-  ghc-options:         -Wall
   if flag(lib-Werror)
     ghc-options: -Wall -Werror
   if os(darwin)
@@ -89,4 +89,4 @@ test-suite ridley-test
 
 source-repository head
   type:     git
-  location: https://github.com/iconnect/haskell-oss/ridley
+  location: https://github.com/iconnect/ridley
