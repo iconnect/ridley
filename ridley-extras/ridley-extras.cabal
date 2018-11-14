@@ -1,5 +1,5 @@
 name:                ridley-extras
-version:             0.1.0.1
+version:             0.1.0.2
 synopsis:            Handy metrics that don't belong to ridley.
 description:         See README.md
 homepage:            https://github.com/iconnect/ridley/ridley-extras#readme
@@ -23,8 +23,8 @@ library
   exposed-modules:     System.Metrics.Prometheus.Ridley.Metrics.FD
   build-depends:       base >= 4.7 && < 5,
                        text,
-                       prometheus < 0.5.0.0,
-                       shelly < 1.7.0.0,
+                       prometheus < 2.2,
+                       shelly < 1.9.0.0,
                        microlens,
                        ekg-prometheus-adapter < 0.2.0.0,
                        mtl,

@@ -1,13 +1,13 @@
-resolver: lts-7.4
+resolver: lts-12.18
 
 packages:
 - 'ridley'
 - 'ridley-extras'
 
 extra-deps:
-  - ekg-prometheus-adapter-0.1.0.3
-  - prometheus-0.4.1
-  - katip-0.3.0.0
+  - ekg-prometheus-adapter-0.1.0.4
+  - prometheus-2.1.0
+  - katip-0.6.3.0
 
 flags:
   ridley:
