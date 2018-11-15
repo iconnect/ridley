@@ -3,9 +3,10 @@ resolver: lts-12.18
 packages:
 - 'ridley'
 - 'ridley-extras'
+- /users/marklnichols/dev/prometheus/ekg-prometheus-adapter
 
 extra-deps:
-  - ekg-prometheus-adapter-0.1.0.4
+#  - ekg-prometheus-adapter-0.1.0.4
   - prometheus-2.1.0
   - katip-0.6.3.0
 

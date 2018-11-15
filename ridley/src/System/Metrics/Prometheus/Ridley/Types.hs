@@ -32,7 +32,6 @@ import           Control.Monad.IO.Class
 import           Control.Monad.Reader (MonadReader)
 import           Control.Monad.Trans.Class
 import           Control.Monad.Trans.Reader
-import           Data.Monoid
 import qualified Data.Set as Set
 import qualified Data.Text as T
 import           Data.Time
@@ -177,10 +176,13 @@ makeLenses ''RidleyCtx
 
 instance Katip Ridley where
   getLogEnv = Ridley $ lift (lift getLogEnv)
+  localLogEnv = localLogEnv
 
 instance KatipContext Ridley where
   getKatipContext   = return mempty
+  localKatipContext = localKatipContext
   getKatipNamespace = _logEnvApp <$> Ridley (lift $ lift (getLogEnv))
+  localKatipNamespace = localKatipNamespace
 
 --------------------------------------------------------------------------------
 runRidley :: RidleyOptions -> LogEnv -> Ridley a -> IO a
