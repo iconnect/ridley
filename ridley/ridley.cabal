@@ -33,7 +33,7 @@ library
   build-depends:       async < 3.0.0,
                        base >= 4.7 && < 5,
                        containers < 0.6.0.0,
-                       katip >= 6.0 && < 0.7
+                       katip >= 0.6 && < 0.7,
                        wai-middleware-metrics < 0.3.0.0,
                        template-haskell,
                        ekg-core,
