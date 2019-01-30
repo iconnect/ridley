@@ -23,8 +23,8 @@ library
   exposed-modules:     System.Metrics.Prometheus.Ridley.Metrics.FD
   build-depends:       base >= 4.7 && < 5,
                        text,
-                       prometheus < 0.5.0.0,
-                       shelly < 1.7.0.0,
+                       prometheus < 3,
+                       shelly < 1.9.0.0,
                        microlens,
                        ekg-prometheus-adapter < 0.2.0.0,
                        mtl,
