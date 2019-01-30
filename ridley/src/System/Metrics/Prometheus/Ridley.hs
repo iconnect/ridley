@@ -42,7 +42,11 @@ import           Katip
 import           Lens.Micro
 import           Network.Wai.Metrics (registerWaiMetrics)
 import           System.Metrics as EKG
+#if (MIN_VERSION_prometheus(0,5,0))
+import qualified System.Metrics.Prometheus.Http.Scrape as P
+#else
 import qualified System.Metrics.Prometheus.Concurrent.Http as P
+#endif
 import           System.Metrics.Prometheus.Metric.Counter (add)
 import qualified System.Metrics.Prometheus.RegistryT as P
 import           System.Metrics.Prometheus.Ridley.Metrics.CPU
@@ -134,7 +138,11 @@ startRidleyWithStore opts path port store = do
       le <- initLogEnv (opts ^. katipScribes . _1) "production"
 
       -- Register all the externally-passed Katip's Scribe
+#if (MIN_VERSION_katip(0,5,0))
+      le' <- foldM (\le0 (n,s) -> registerScribe n s defaultScribeSettings le0) le (opts ^. katipScribes . _2)
+#else
       let le' = List.foldl' (\le0 (n,s) -> registerScribe n s le0) le (opts ^. katipScribes . _2)
+#endif
 
       -- Start the server
       serverLoop <- async $ runRidley opts le' $ do
