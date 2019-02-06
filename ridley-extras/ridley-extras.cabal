@@ -6,7 +6,7 @@ homepage:            https://github.com/iconnect/ridley/ridley-extras#readme
 license:             BSD3
 license-file:        LICENSE
 author:              Alfredo Di Napoli
-maintainer:          alfredo@irisconnect.co.uk
+maintainer:          chrisd@irisconnect.co.uk
 copyright:           2017 Alfredo Di Napoli & IRIS Connect Engineering Team
 category:            Web
 build-type:          Simple
