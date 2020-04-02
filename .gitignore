@@ -17,3 +17,5 @@ scott-test.*
 example/Main.hi
 example/Main.o
 ridley-extras/dist
+tags
+dist-newstyle
