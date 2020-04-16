@@ -1,6 +1,7 @@
 {-# LANGUAGE CPP #-}
 module System.Metrics.Prometheus.Ridley.Metrics.CPU
-  ( processCPULoad
+  ( getLoadAvg
+  , processCPULoad
   ) where
 
 #ifdef darwin_HOST_OS

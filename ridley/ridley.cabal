@@ -58,8 +58,7 @@ library
   if flag(lib-Werror)
     ghc-options: -Wall -Werror
   if os(darwin)
-    c-sources:         src/System/Metrics/Prometheus/Ridley/Metrics/Network/Darwin.c
-                       src/System/Metrics/Prometheus/Ridley/Metrics/CPU/Darwin.c
+    c-sources:         src/System/Metrics/Prometheus/Ridley/Metrics/CPU/Darwin.c
     other-modules:     System.Metrics.Prometheus.Ridley.Metrics.Network.Darwin
                        System.Metrics.Prometheus.Ridley.Metrics.CPU.Darwin
   else
