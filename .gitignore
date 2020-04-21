@@ -1,4 +1,5 @@
 .stack-work
+.ghc.environment.*
 commands
 test/TestCommands.c
 test/TestCommands.dyn_hi
