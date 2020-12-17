@@ -42,7 +42,7 @@ library
                        mtl,
                        shelly,
                        transformers,
-                       prometheus,
+                       prometheus < 2.2.1,
                        raw-strings-qq,
                        microlens,
                        microlens-th,

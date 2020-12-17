@@ -1,2 +1,5 @@
 packages: ridley
           ridley-extras
+
+allow-newer:
+  katip:time,template-haskell

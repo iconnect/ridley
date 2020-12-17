@@ -166,7 +166,7 @@ runHandler (RidleyMetricHandler m u f) = u m f
 newtype RidleyT t a = Ridley { unRidley :: ReaderT RidleyOptions t a }
   deriving (Functor, Applicative, Monad, MonadReader RidleyOptions, MonadIO, MonadTrans)
 
-type Ridley = RidleyT (P.RegistryT (KatipT IO))
+type Ridley = RidleyT (P.RegistryT (KatipContextT IO))
 
 data RidleyCtx = RidleyCtx {
     _ridleyThreadId   :: ThreadId
@@ -177,11 +177,18 @@ makeLenses ''RidleyCtx
 
 instance Katip Ridley where
   getLogEnv = Ridley $ lift (lift getLogEnv)
+  localLogEnv f (Ridley (ReaderT m)) =
+    Ridley $ ReaderT $ \env -> P.RegistryT (localLogEnv f $ P.unRegistryT (m env))
 
 instance KatipContext Ridley where
   getKatipContext   = return mempty
   getKatipNamespace = _logEnvApp <$> Ridley (lift $ lift (getLogEnv))
+  localKatipContext f (Ridley (ReaderT m)) =
+    Ridley $ ReaderT $ \env -> P.RegistryT (localKatipContext f $ P.unRegistryT (m env))
+  localKatipNamespace f (Ridley (ReaderT m)) =
+    Ridley $ ReaderT $ \env -> P.RegistryT (localKatipNamespace f $ P.unRegistryT (m env))
 
 --------------------------------------------------------------------------------
 runRidley :: RidleyOptions -> LogEnv -> Ridley a -> IO a
-runRidley opts le ridley = (runReaderT $ unKatipT $ P.evalRegistryT $ (runReaderT $ unRidley ridley) opts) le
+runRidley opts le (Ridley ridley) =
+  (runKatipContextT le (mempty :: SimpleLogPayload) mempty $ P.evalRegistryT $ (runReaderT ridley) opts)
