@@ -19,12 +19,6 @@ jobs:
           # GHC 8.8+ only works with cabal v3+
           - ghc: 8.8.4
             cabal: 2.4.1.0
-
-        include:
-      # for the matrix leg matching the os and version
-          - os: ubuntu-latest
-            ghc: latest
-            cabal: latest
     name: Haskell GHC ${{ matrix.ghc }} and cabal ${{matrix.cabal}} on ${{matrix.os}}
     steps:
       - uses: actions/checkout@v2
@@ -33,4 +27,6 @@ jobs:
         with:
           ghc-version: ${{ matrix.ghc }}
           cabal-version: ${{ matrix.cabal }}
-      - run: cabal test
+      - run: |
+          cabal v2-build all
+          cabal v2-test  all
