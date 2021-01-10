@@ -20,6 +20,7 @@ jobs:
           # GHC 8.8+ only works with cabal v3+
           - ghc: 8.8.4
             cabal: 2.4.1.0
+            
     name: cabal / ghc ${{ matrix.ghc }}
     steps:
       - uses: actions/checkout@v2
@@ -28,8 +29,13 @@ jobs:
         with:
           ghc-version: ${{ matrix.ghc }}
           cabal-version: ${{ matrix.cabal }}
-      - run: |
+
+      - name: Build
+        run: |
           cabal v2-build all
+
+      - name: Test
+        run: |
           cabal v2-test  all
 
   stack:
