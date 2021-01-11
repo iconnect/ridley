@@ -79,4 +79,4 @@ jobs:
 
     - name: Test
       run: |
-        stack test --system-ghc
+        stack test --system-ghc --stack-yaml stack-${{ matrix.ghc }}.yaml
