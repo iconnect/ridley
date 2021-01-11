@@ -19,12 +19,12 @@ packages:
   original:
     hackage: katip-0.3.1.4
 - completed:
-    hackage: prometheus-0.4.1@sha256:90b88e9a2cddf14e618008941e6ad8cd8b3e8519493db1c871eb15a2c0de68ad,3718
+    hackage: prometheus-2.1.3@sha256:4fdf8602f7c74367cda182cf71dab108f78a86993b428bf96b61dd6c519b6f22,4296
     pantry-tree:
-      size: 1464
-      sha256: 87668f0691cd47af27f1b9eae4667e5ec07864db5f07fbe6fdf4a916b92afd2c
+      size: 1559
+      sha256: a8d0a0150abddf0d7b673fcb19ff2ef235d4005161826e1538ad802394c9fc0e
   original:
-    hackage: prometheus-0.4.1
+    hackage: prometheus-2.1.3
 snapshots:
 - completed:
     size: 423183

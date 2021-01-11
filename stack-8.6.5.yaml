@@ -1,5 +1,6 @@
 resolver: lts-7.14
 install-ghc: true
+allow-newer: true
 flags: {}
 packages:
 - 'ridley'
@@ -8,4 +9,4 @@ system-ghc: false
 extra-deps:
 - ekg-prometheus-adapter-0.1.0.3
 - katip-0.3.1.4
-- prometheus-0.4.1
+- prometheus-2.1.3
