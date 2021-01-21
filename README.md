@@ -1,6 +1,4 @@
-[![Build Status](https://travis-ci.org/iconnect/ridley.svg?branch=master)](https://travis-ci.org/iconnect/ridley)
-[![Build status](https://ci.appveyor.com/api/projects/status/ek7xds2smj3hm029/branch/master?svg=true)](https://ci.appveyor.com/project/engineerirngirisconnectcouk/scott/branch/master)
-[![Coverage](https://coveralls.io/repos/github/iconnect/ridley/badge.svg?branch=master)](https://coveralls.io/github/iconnect/ridley?branch=master)
+![Haskell CI](https://github.com/iconnect/ridley/workflows/Haskell%20CI/badge.svg?branch=master)
 
 _"Quick metrics to grow your production app healthy & strong."_
 
