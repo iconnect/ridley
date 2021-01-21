@@ -80,11 +80,6 @@ unitTests = testGroup "Unit tests"
         r <- getRegistry >>= sample
         Map.null (unRegistrySample r) @?= False
         containsMetrics 8701 [ "# TYPE wai_request_count counter"
-                             , "# TYPE wai_response_status_1xx counter"
-                             , "# TYPE wai_response_status_2xx counter"
-                             , "# TYPE wai_response_status_3xx counter"
-                             , "# TYPE wai_response_status_4xx counter"
-                             , "# TYPE wai_response_status_5xx counter"
                              ]
 
   , withResource (startRidleyWith 8702 [Network]) (\(_, ctx) -> killThread (ctx ^. ridleyThreadId)) $ \setupFn -> do

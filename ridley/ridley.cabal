@@ -1,5 +1,5 @@
 name:                ridley
-version:             0.3.1.4
+version:             0.3.1.5
 synopsis:            Quick metrics to grow your app strong.
 description:         Please see README.md
 homepage:            https://github.com/iconnect/ridley#README
@@ -42,7 +42,7 @@ library
                        mtl,
                        shelly,
                        transformers,
-                       prometheus,
+                       prometheus > 0.5.0 && < 2.2.1,
                        raw-strings-qq,
                        microlens,
                        microlens-th,
