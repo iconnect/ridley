@@ -1,5 +1,5 @@
 name:                ridley-extras
-version:             0.1.0.2
+version:             0.1.1.0
 synopsis:            Handy metrics that don't belong to ridley.
 description:         See README.md
 homepage:            https://github.com/iconnect/ridley/ridley-extras#readme
