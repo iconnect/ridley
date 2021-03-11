@@ -26,7 +26,7 @@ import           Control.Concurrent (threadDelay, forkIO)
 import           Control.Concurrent.Async
 import           Control.Concurrent.MVar
 import           Control.Monad (foldM)
-import           Control.Monad.IO.Class (liftIO)
+import           Control.Monad.IO.Class (liftIO, MonadIO)
 import           Control.Monad.Reader (ask)
 import           Control.Monad.Trans.Class (lift)
 import           Data.IORef
@@ -49,6 +49,7 @@ import qualified System.Metrics.Prometheus.Concurrent.Http as P
 #endif
 import           System.Metrics.Prometheus.Metric.Counter (add)
 import qualified System.Metrics.Prometheus.RegistryT as P
+import           System.Metrics.Prometheus.Registry (RegistrySample)
 import           System.Metrics.Prometheus.Ridley.Metrics.CPU
 import           System.Metrics.Prometheus.Ridley.Metrics.DiskUsage
 import           System.Metrics.Prometheus.Ridley.Metrics.Memory
@@ -154,7 +155,7 @@ startRidleyWithStore opts path port store = do
           updateLoop <- async $ handlersLoop lastUpdate handlers
           putMVar x updateLoop
 
-        lift $ P.sample >>= P.serveHttpTextMetrics port path
+        lift $ P.sample >>= serveMetrics port path
 
       ul  <- takeMVar x
       link2 serverLoop ul
@@ -181,6 +182,13 @@ startRidleyWithStore opts path port store = do
       threadDelay (freq * 10^6)
       updateHandlers (List.map (\x -> x { flush = mustFlush }) handlers)
       handlersLoop lastUpdateRef handlers
+
+serveMetrics :: MonadIO m => Int -> P.Path -> IO RegistrySample -> m ()
+#if (MIN_VERSION_prometheus(2,2,2))
+serveMetrics = P.serveMetrics
+#else
+serveMetrics = P.serveHttpTextMetrics
+#endif
 
 --------------------------------------------------------------------------------
 updateHandlers :: [RidleyMetricHandler] -> IO ()

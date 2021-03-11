@@ -1,5 +1,5 @@
 name:                ridley
-version:             0.3.2.0
+version:             0.3.2.1
 synopsis:            Quick metrics to grow your app strong.
 description:         Please see README.md
 homepage:            https://github.com/iconnect/ridley#README
@@ -33,7 +33,7 @@ library
   build-depends:       async < 3.0.0,
                        base >= 4.7 && < 5,
                        containers < 0.7.0.0,
-                       katip < 0.8.0.0,
+                       katip < 0.9.0.0,
                        wai-middleware-metrics < 0.3.0.0,
                        template-haskell,
                        ekg-core,
@@ -42,7 +42,7 @@ library
                        mtl,
                        shelly,
                        transformers,
-                       prometheus > 0.5.0 && < 2.2.1,
+                       prometheus > 0.5.0 && < 2.3.0,
                        raw-strings-qq,
                        microlens,
                        microlens-th,
