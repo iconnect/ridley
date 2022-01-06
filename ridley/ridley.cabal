@@ -44,7 +44,7 @@ library
                        template-haskell,
                        ekg-core,
                        time,
-                       text,
+                       text >= 1.2.4.0,
                        mtl,
                        shelly,
                        transformers,
