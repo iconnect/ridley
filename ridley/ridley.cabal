@@ -31,6 +31,7 @@ library
                        System.Metrics.Prometheus.Ridley.Metrics.Network.Types
 
   build-depends:       async < 3.0.0,
+                       auto-update >= 0.1,
                        base >= 4.7 && < 5,
                        containers < 0.7.0.0,
                        katip < 0.9.0.0,

@@ -2,6 +2,6 @@ packages: ridley
           ridley-extras
 
 allow-newer:
-  katip:time,template-haskell
-  prometheus:base
+  katip:time,template-haskell,
+  prometheus:base,
   unliftio-core:base
