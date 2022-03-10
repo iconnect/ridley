@@ -3,6 +3,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NumericUnderscores #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE CPP #-}
 module System.Metrics.Prometheus.Ridley (
     startRidley
@@ -27,6 +28,7 @@ import           Control.AutoUpdate as Auto
 import           Control.Concurrent (threadDelay, forkIO)
 import           Control.Concurrent.Async
 import           Control.Concurrent.MVar
+import qualified Control.Exception.Safe as Ex
 import           Control.Monad (foldM)
 import           Control.Monad.IO.Class (liftIO, MonadIO)
 import           Control.Monad.Reader (ask)
@@ -34,12 +36,12 @@ import           Control.Monad.Trans.Class (lift)
 import           Data.IORef
 import qualified Data.List as List
 import           Data.Map.Strict as M
-import           Data.Monoid ((<>))
 import qualified Data.Set as Set
 import           Data.String
 import qualified Data.Text as T
 import           Data.Time
 import           GHC.Conc (getNumCapabilities, getNumProcessors)
+import           GHC.Stack
 import           Katip
 import           Lens.Micro
 import           Network.Wai.Metrics (registerWaiMetrics)
@@ -57,6 +59,7 @@ import           System.Metrics.Prometheus.Ridley.Metrics.DiskUsage
 import           System.Metrics.Prometheus.Ridley.Metrics.Memory
 import           System.Metrics.Prometheus.Ridley.Metrics.Network
 import           System.Metrics.Prometheus.Ridley.Types
+import           System.Metrics.Prometheus.Ridley.Types.Internal
 import           System.Remote.Monitoring.Prometheus
 
 --------------------------------------------------------------------------------
@@ -76,17 +79,18 @@ registerMetrics (x:xs) = do
   opts <- ask
   let popts = opts ^. prometheusOptions
   let sev   = opts ^. katipSeverity
+  le <- getLogEnv
   case x of
     CustomMetric metricName mb_timeout custom -> do
       customMetric <- case mb_timeout of
         Nothing   -> lift (custom opts)
         Just microseconds -> do
-          RidleyMetricHandler mtr upd flsh <- lift (custom opts)
+          RidleyMetricHandler mtr upd flsh lbl cs <- lift (custom opts)
           doUpdate <- liftIO $ Auto.mkAutoUpdate Auto.defaultUpdateSettings
-                        { updateAction = upd mtr flsh
+                        { updateAction = upd mtr flsh `Ex.catch` logFailedUpdate le lbl cs
                         , updateFreq   = microseconds
                         }
-          pure $ RidleyMetricHandler mtr (\_ _ -> doUpdate) flsh
+          pure $ RidleyMetricHandler mtr (\_ _ -> doUpdate) flsh lbl cs
       $(logTM) sev $ "Registering CustomMetric '" <> fromString (T.unpack metricName) <> "'..."
       (customMetric :) <$> (registerMetrics xs)
     ProcessMemory -> do
@@ -162,7 +166,7 @@ startRidleyWithStore opts path port store = do
 
         liftIO $ do
           lastUpdate <- newIORef =<< getCurrentTime
-          updateLoop <- async $ handlersLoop lastUpdate handlers
+          updateLoop <- async $ handlersLoop le' lastUpdate handlers
           putMVar x updateLoop
 
         lift $ P.sample >>= serveMetrics port path
@@ -175,8 +179,8 @@ startRidleyWithStore opts path port store = do
           $(logTM) ErrorS (fromString $ show e)
         Right _ -> return ()
 
-    handlersLoop :: IORef UTCTime -> [RidleyMetricHandler] -> IO a
-    handlersLoop lastUpdateRef handlers = do
+    handlersLoop :: LogEnv -> IORef UTCTime -> [RidleyMetricHandler] -> IO a
+    handlersLoop le lastUpdateRef handlers = do
       let freq = opts ^. prometheusOptions . samplingFrequency
       let flushPeriod = opts ^. dataRetentionPeriod
       mustFlush <- case flushPeriod of
@@ -190,8 +194,8 @@ startRidleyWithStore opts path port store = do
               return True
             False -> return False
       threadDelay (freq * 10^6)
-      updateHandlers (List.map (\x -> x { flush = mustFlush }) handlers)
-      handlersLoop lastUpdateRef handlers
+      updateHandlers le (List.map (\x -> x { flush = mustFlush }) handlers)
+      handlersLoop le lastUpdateRef handlers
 
 serveMetrics :: MonadIO m => Int -> P.Path -> IO RegistrySample -> m ()
 #if (MIN_VERSION_prometheus(2,2,2))
@@ -201,5 +205,16 @@ serveMetrics = P.serveHttpTextMetrics
 #endif
 
 --------------------------------------------------------------------------------
-updateHandlers :: [RidleyMetricHandler] -> IO ()
-updateHandlers = mapM_ runHandler
+updateHandlers :: LogEnv -> [RidleyMetricHandler] -> IO ()
+updateHandlers le hs = mapM_ (\h@RidleyMetricHandler{..} -> runHandler h `Ex.catchAny` (logFailedUpdate le label _cs)) hs
+
+logFailedUpdate :: LogEnv -> T.Text -> CallStack -> Ex.SomeException -> IO ()
+logFailedUpdate le lbl cs ex =
+  runKatipContextT le () "errors" $ do
+      $(logTM) ErrorS $
+        fromString $ "Couldn't update handler for "
+                  <> "\"" <> T.unpack lbl <> "\""
+                  <> " due to "
+                  <> Ex.displayException ex
+                  <> " originally defined at "
+                  <> prettyCallStack cs

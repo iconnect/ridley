@@ -70,11 +70,7 @@ updateNetworkMetrics nmetrics mustFlush = do
 
 --------------------------------------------------------------------------------
 networkMetrics :: NetworkMetrics -> RidleyMetricHandler
-networkMetrics g = RidleyMetricHandler {
-    metric = g
-  , updateMetric = updateNetworkMetrics
-  , flush = False
-  }
+networkMetrics g = mkRidleyMetricHandler "ridley-network-metrics" g updateNetworkMetrics False
 
 --------------------------------------------------------------------------------
 mkInterfaceGauge :: MonadIO m => P.Labels -> NetworkMetrics -> IfData -> P.RegistryT m NetworkMetrics

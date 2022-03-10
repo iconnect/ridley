@@ -1,10 +1,10 @@
-{-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 module System.Metrics.Prometheus.Ridley.Types (
     RidleyT(Ridley)
   , Ridley
@@ -16,7 +16,12 @@ module System.Metrics.Prometheus.Ridley.Types (
   , PrometheusOptions
   , RidleyMetric(..)
   , RidleyOptions
-  , RidleyMetricHandler(..)
+  , RidleyMetricHandler
+  , metric
+  , updateMetric
+  , flush
+  , label
+  , mkRidleyMetricHandler
   , defaultMetrics
   , newOptions
   , prometheusOptions
@@ -32,27 +37,31 @@ import           Control.Monad.IO.Class
 import           Control.Monad.Reader (MonadReader)
 import           Control.Monad.Trans.Class
 import           Control.Monad.Trans.Reader
-import           Data.Monoid
 import qualified Data.Set as Set
 import qualified Data.Text as T
 import           Data.Time
+import           GHC.Stack
 import           Katip
 import           Lens.Micro.TH
 import           Network.Wai.Metrics (WaiMetrics)
 import qualified System.Metrics.Prometheus.MetricId as P
 import qualified System.Metrics.Prometheus.RegistryT as P
 import           System.Remote.Monitoring.Prometheus
+import           System.Metrics.Prometheus.Ridley.Types.Internal
 
 --------------------------------------------------------------------------------
 type Port = Int
 type PrometheusOptions = AdapterOptions
 
---------------------------------------------------------------------------------
-data RidleyMetricHandler = forall c. RidleyMetricHandler {
-    metric       :: c
-  , updateMetric :: c -> Bool -> IO ()
-  , flush        :: !Bool
-  -- ^Whether or net to flush this Metric
+mkRidleyMetricHandler :: forall c. HasCallStack
+                      => T.Text
+                      -> c -> (c -> Bool -> IO ()) -> Bool -> RidleyMetricHandler
+mkRidleyMetricHandler lbl c runC flsh = withFrozenCallStack $ RidleyMetricHandler {
+    metric       = c
+  , updateMetric = runC
+  , flush        = flsh
+  , label        = lbl
+  , _cs          = popCallStack callStack
   }
 
 --------------------------------------------------------------------------------
@@ -170,10 +179,10 @@ newOptions appLabels metrics = RidleyOptions {
 
 --------------------------------------------------------------------------------
 runHandler :: RidleyMetricHandler -> IO ()
-runHandler (RidleyMetricHandler m u f) = u m f
+runHandler (RidleyMetricHandler m u f _ _) = u m f
 
 --------------------------------------------------------------------------------
-newtype RidleyT t a = Ridley { unRidley :: ReaderT RidleyOptions t a }
+newtype RidleyT t a = Ridley { _unRidley :: ReaderT RidleyOptions t a }
   deriving (Functor, Applicative, Monad, MonadReader RidleyOptions, MonadIO, MonadTrans)
 
 type Ridley = RidleyT (P.RegistryT (KatipContextT IO))

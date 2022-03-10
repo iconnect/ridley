@@ -32,8 +32,4 @@ updateProcessMemory g _ = do
 
 --------------------------------------------------------------------------------
 processMemory :: P.Gauge -> RidleyMetricHandler
-processMemory g = RidleyMetricHandler {
-    metric = g
-  , updateMetric = updateProcessMemory
-  , flush = False
-  }
+processMemory g = mkRidleyMetricHandler "ridley-process-memory" g updateProcessMemory False

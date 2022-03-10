@@ -43,8 +43,4 @@ updateCPULoad (cpu1m, cpu5m, cpu15m) _ = do
 
 --------------------------------------------------------------------------------
 processCPULoad :: (P.Gauge, P.Gauge, P.Gauge) -> RidleyMetricHandler
-processCPULoad g = RidleyMetricHandler {
-    metric = g
-  , updateMetric = updateCPULoad
-  , flush = False
-  }
+processCPULoad g = mkRidleyMetricHandler "ridley-process-cpu-load" g updateCPULoad False

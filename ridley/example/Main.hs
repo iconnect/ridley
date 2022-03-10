@@ -9,19 +9,18 @@ import           Lens.Micro
 import           Web.Spock
 import           Web.Spock.Config
 import           Network.Wai.Metrics
+import           Control.Exception
 import           Control.Monad.Trans
-import           Data.Monoid
 import           Data.Time.Clock.POSIX
-import           Data.IORef
 import           Katip
 import           System.IO
-import qualified Data.Text as T
 
 spockWeb :: RidleyCtx -> IO ()
 spockWeb ctx = do
   spockCfg <- defaultSpockCfg () PCNoDatabase ()
   runSpock 8080 (spock spockCfg (app ctx))
 
+app :: RidleyCtx -> SpockCtxM ctx conn sess st ()
 app ctx = do
   case ctx ^. ridleyWaiMetrics of
     Nothing -> return ()
@@ -36,7 +35,7 @@ customExpensiveMetric =
     get_metric :: MonadIO m => RidleyOptions -> P.RegistryT m RidleyMetricHandler
     get_metric opts = do
         m <- P.registerGauge "current_time" (opts ^. prometheusOptions . labels)
-        return RidleyMetricHandler { metric = m, updateMetric = update, flush = False }
+        return $ mkRidleyMetricHandler "current_time" m update False
 
     update :: P.Gauge -> Bool -> IO ()
     update gauge _ = do n  <- getPOSIXTime
@@ -44,17 +43,26 @@ customExpensiveMetric =
                         putStrLn $ "Updating time, at " <> show tn
                         P.set (realToFrac n) gauge
 
+customCrashfulMetric :: RidleyMetric
+customCrashfulMetric =
+  CustomMetric "my-crashful" (Just $ 60 * 1_000_000) get_metric
+  where
+    get_metric :: MonadIO m => RidleyOptions -> P.RegistryT m RidleyMetricHandler
+    get_metric opts = do
+        m <- P.registerGauge "crashful" (opts ^. prometheusOptions . labels)
+        return $ mkRidleyMetricHandler "crashful" m (\_ _ -> throwIO $ userError "CRASH!!") False
+
 main :: IO ()
 main = do
 #if MIN_VERSION_katip(0,8,0)
-    let onlyErrors i = pure $ Katip._itemSeverity i >= Katip.ErrorS
+    let onlyErrors i = pure $ Katip._itemSeverity i >= Katip.DebugS
     ridleyScribe <-
       Katip.mkHandleScribe Katip.ColorIfTerminal stdout onlyErrors Katip.V2
 #else
     ridleyScribe <-
-      Katip.mkHandleScribe Katip.ColorIfTerminal stdout Katip.ErrorS Katip.V2
+      Katip.mkHandleScribe Katip.ColorIfTerminal stdout Katip.DebugS Katip.V2
 #endif
-    let opts = newOptions [("service", "ridley-test")] (customExpensiveMetric : defaultMetrics)
+    let opts = newOptions [("service", "ridley-test")] (customExpensiveMetric : customCrashfulMetric : defaultMetrics)
              & prometheusOptions . samplingFrequency .~ 5
              & dataRetentionPeriod .~ Just 60
              & katipScribes .~ ("RidleyTest", [("stdout", ridleyScribe)])

@@ -52,8 +52,4 @@ processOpenFD :: MonadIO m
 processOpenFD pid opts = do
   let popts = opts ^. prometheusOptions
   openFD <- P.registerGauge "process_open_fd" (popts ^. labels)
-  return RidleyMetricHandler {
-    metric = openFD
-  , updateMetric = updateOpenFD pid
-  , flush = False
-  }
+  return $ mkRidleyMetricHandler "ridley-process-open-file-descriptors" openFD (updateOpenFD pid) False

@@ -12,7 +12,6 @@ module System.Metrics.Prometheus.Ridley.Metrics.Network.Darwin
 import           Control.Monad
 import           Control.Monad.IO.Class
 import qualified Data.Map.Strict as M
-import           Data.Monoid ((<>))
 import qualified Data.Text as T
 import           Foreign.C.String
 import           Foreign.C.Types
@@ -167,11 +166,7 @@ updateNetworkMetrics nmetrics flush = do
 
 --------------------------------------------------------------------------------
 networkMetrics :: NetworkMetrics -> RidleyMetricHandler
-networkMetrics g = RidleyMetricHandler {
-    metric = g
-  , updateMetric = updateNetworkMetrics
-  , flush = False
-  }
+networkMetrics g = mkRidleyMetricHandler "ridley-network-metrics" g updateNetworkMetrics False
 
 --------------------------------------------------------------------------------
 mkInterfaceGauge :: MonadIO m => P.Labels -> NetworkMetrics -> IfData -> P.RegistryT m NetworkMetrics
