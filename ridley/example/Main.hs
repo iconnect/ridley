@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE NumericUnderscores #-}
 {-# LANGUAGE CPP #-}
 import           System.Metrics.Prometheus.Ridley
 import qualified System.Metrics.Prometheus.Metric.Gauge as P
@@ -30,7 +31,7 @@ app ctx = do
 
 customExpensiveMetric :: RidleyMetric
 customExpensiveMetric =
-  CustomMetric "my-expensive" (Just 60) get_metric
+  CustomMetric "my-expensive" (Just $ 60 * 1_000_000) get_metric
   where
     get_metric :: MonadIO m => RidleyOptions -> P.RegistryT m RidleyMetricHandler
     get_metric opts = do

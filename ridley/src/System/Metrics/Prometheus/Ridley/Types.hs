@@ -67,7 +67,7 @@ data RidleyMetric = ProcessMemory
                   | CustomMetric !T.Text
                                  -- ^ The name of the metric
                                  !(Maybe Int)
-                                 -- ^ An optional timeout, in seconds,
+                                 -- ^ An optional timeout, in microseconds,
                                  -- that regulates how often the metric is
                                  -- actually updated. If Nothing, the metric
                                  -- will be updated using Ridley top-level setting,

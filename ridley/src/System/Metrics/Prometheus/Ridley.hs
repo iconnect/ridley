@@ -80,11 +80,11 @@ registerMetrics (x:xs) = do
     CustomMetric metricName mb_timeout custom -> do
       customMetric <- case mb_timeout of
         Nothing   -> lift (custom opts)
-        Just secs -> do
+        Just microseconds -> do
           RidleyMetricHandler mtr upd flsh <- lift (custom opts)
           doUpdate <- liftIO $ Auto.mkAutoUpdate Auto.defaultUpdateSettings
                         { updateAction = upd mtr flsh
-                        , updateFreq   = secs * 1_000_000
+                        , updateFreq   = microseconds
                         }
           pure $ RidleyMetricHandler mtr (\_ _ -> doUpdate) flsh
       $(logTM) sev $ "Registering CustomMetric '" <> fromString (T.unpack metricName) <> "'..."
