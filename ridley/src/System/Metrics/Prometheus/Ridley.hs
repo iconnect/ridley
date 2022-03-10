@@ -2,6 +2,7 @@
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE NumericUnderscores #-}
 {-# LANGUAGE CPP #-}
 module System.Metrics.Prometheus.Ridley (
     startRidley
@@ -22,6 +23,7 @@ module System.Metrics.Prometheus.Ridley (
   , defaultMetrics
   ) where
 
+import           Control.AutoUpdate as Auto
 import           Control.Concurrent (threadDelay, forkIO)
 import           Control.Concurrent.Async
 import           Control.Concurrent.MVar
@@ -75,8 +77,16 @@ registerMetrics (x:xs) = do
   let popts = opts ^. prometheusOptions
   let sev   = opts ^. katipSeverity
   case x of
-    CustomMetric metricName custom -> do
-      customMetric <- lift (custom opts)
+    CustomMetric metricName mb_timeout custom -> do
+      customMetric <- case mb_timeout of
+        Nothing   -> lift (custom opts)
+        Just microseconds -> do
+          RidleyMetricHandler mtr upd flsh <- lift (custom opts)
+          doUpdate <- liftIO $ Auto.mkAutoUpdate Auto.defaultUpdateSettings
+                        { updateAction = upd mtr flsh
+                        , updateFreq   = microseconds
+                        }
+          pure $ RidleyMetricHandler mtr (\_ _ -> doUpdate) flsh
       $(logTM) sev $ "Registering CustomMetric '" <> fromString (T.unpack metricName) <> "'..."
       (customMetric :) <$> (registerMetrics xs)
     ProcessMemory -> do

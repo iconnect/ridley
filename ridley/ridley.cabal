@@ -1,5 +1,5 @@
 name:                ridley
-version:             0.3.2.1
+version:             0.3.3.0
 synopsis:            Quick metrics to grow your app strong.
 description:         Please see README.md
 homepage:            https://github.com/iconnect/ridley#README
@@ -19,6 +19,11 @@ flag lib-Werror
      default: False
      description: Enable -Werror
 
+flag library-only
+  description: Build without the executable, for downstream packages
+  manual: True
+  default: True
+
 library
   hs-source-dirs:      src
   include-dirs:        include
@@ -31,6 +36,7 @@ library
                        System.Metrics.Prometheus.Ridley.Metrics.Network.Types
 
   build-depends:       async < 3.0.0,
+                       auto-update >= 0.1,
                        base >= 4.7 && < 5,
                        containers < 0.7.0.0,
                        katip < 0.9.0.0,
@@ -38,7 +44,7 @@ library
                        template-haskell,
                        ekg-core,
                        time,
-                       text,
+                       text >= 1.2.4.0,
                        mtl,
                        shelly,
                        transformers,
@@ -85,6 +91,22 @@ test-suite ridley-test
                      , http-client >= 0.4.30
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
+
+executable ridley-example
+    main-is: example/Main.hs
+    if !flag(library-only)
+      build-depends: base
+                   , time
+                   , ridley
+                   , katip
+                   , text
+                   , wai-middleware-metrics
+                   , Spock
+                   , microlens
+                   , mtl
+                   , prometheus
+    if flag(library-only)
+      buildable: False
 
 source-repository head
   type:     git

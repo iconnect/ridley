@@ -20,3 +20,5 @@ example/Main.o
 ridley-extras/dist
 tags
 dist-newstyle
+hie.yaml
+cabal.project.local

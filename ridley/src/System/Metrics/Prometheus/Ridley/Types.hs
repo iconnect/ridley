@@ -64,7 +64,17 @@ data RidleyMetric = ProcessMemory
                   | Wai
                   | DiskUsage
                   -- ^ Gets stats about Disk usage (free space, etc)
-                  | CustomMetric T.Text (forall m. MonadIO m => RidleyOptions -> P.RegistryT m RidleyMetricHandler)
+                  | CustomMetric !T.Text
+                                 -- ^ The name of the metric
+                                 !(Maybe Int)
+                                 -- ^ An optional timeout, in microseconds,
+                                 -- that regulates how often the metric is
+                                 -- actually updated. If Nothing, the metric
+                                 -- will be updated using Ridley top-level setting,
+                                 -- if 'Just' the underlying 'IO' action will be run
+                                 -- only every @n@ seconds, or cached otherwise.
+                                 (forall m. MonadIO m => RidleyOptions -> P.RegistryT m RidleyMetricHandler)
+                                 -- ^ An action to generate the handler.
                   -- ^ A user-defined metric, identified by a name.
 
 instance Show RidleyMetric where
@@ -74,7 +84,7 @@ instance Show RidleyMetric where
   show Network               = "Network"
   show Wai                   = "Wai"
   show DiskUsage             = "DiskUsage"
-  show (CustomMetric name _) = "Custom@" <> T.unpack name
+  show (CustomMetric name _ _) = "Custom@" <> T.unpack name
 
 instance Eq RidleyMetric where
   (==) ProcessMemory ProcessMemory             = True
@@ -83,7 +93,7 @@ instance Eq RidleyMetric where
   (==) Network Network                         = True
   (==) Wai     Wai                             = True
   (==) DiskUsage DiskUsage                     = True
-  (==) (CustomMetric n1 _) (CustomMetric n2 _) = (==) n1 n2
+  (==) (CustomMetric n1 _ _) (CustomMetric n2 _ _) = (==) n1 n2
   (==) _ _                                     = False
 
 instance Ord RidleyMetric where
@@ -120,14 +130,14 @@ instance Ord RidleyMetric where
     Wai                    -> LT
     DiskUsage              -> EQ
     _                      -> GT
-  compare (CustomMetric n1 _) xs = case xs of
+  compare (CustomMetric n1 _ _) xs = case xs of
     ProcessMemory          -> LT
     CPULoad                -> LT
     GHCConc                -> LT
     Network                -> LT
     Wai                    -> LT
     DiskUsage              -> LT
-    (CustomMetric n2 _)    -> compare n1 n2
+    (CustomMetric n2 _ _)    -> compare n1 n2
 
 --------------------------------------------------------------------------------
 data RidleyOptions = RidleyOptions {
