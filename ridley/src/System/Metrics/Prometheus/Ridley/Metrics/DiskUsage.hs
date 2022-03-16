@@ -84,11 +84,7 @@ updateDiskUsageMetrics dmetrics flush = do
 
 --------------------------------------------------------------------------------
 diskUsageMetrics :: DiskUsageMetrics -> RidleyMetricHandler
-diskUsageMetrics g = RidleyMetricHandler {
-    metric = g
-  , updateMetric = updateDiskUsageMetrics
-  , flush = False
-  }
+diskUsageMetrics g = mkRidleyMetricHandler "ridley-disk-usage" g updateDiskUsageMetrics False
 
 --------------------------------------------------------------------------------
 mkDiskGauge :: MonadIO m => P.Labels -> DiskUsageMetrics -> DiskStats -> P.RegistryT m DiskUsageMetrics

@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 module System.Metrics.Prometheus.Ridley.Metrics.CPU.Darwin
@@ -5,7 +6,6 @@ module System.Metrics.Prometheus.Ridley.Metrics.CPU.Darwin
   , processCPULoad
   ) where
 
-import           Data.Monoid ((<>))
 import qualified Data.Vector.Storable as V
 import qualified Data.Vector.Storable.Mutable as VM
 import           Foreign.C.Types
@@ -37,8 +37,4 @@ updateCPULoad (cpu1m, cpu5m, cpu15m) _ = do
 
 --------------------------------------------------------------------------------
 processCPULoad :: (P.Gauge, P.Gauge, P.Gauge) -> RidleyMetricHandler
-processCPULoad g = RidleyMetricHandler {
-    metric = g
-  , updateMetric = updateCPULoad
-  , flush = False
-  }
+processCPULoad g = mkRidleyMetricHandler "ridley-process-cpu-load" g updateCPULoad False

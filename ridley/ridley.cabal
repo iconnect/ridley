@@ -34,6 +34,7 @@ library
                        System.Metrics.Prometheus.Ridley.Metrics.CPU
                        System.Metrics.Prometheus.Ridley.Metrics.Network
                        System.Metrics.Prometheus.Ridley.Metrics.Network.Types
+  other-modules:       System.Metrics.Prometheus.Ridley.Types.Internal
 
   build-depends:       async < 3.0.0,
                        auto-update >= 0.1,
@@ -47,6 +48,7 @@ library
                        text >= 1.2.4.0,
                        mtl,
                        shelly,
+                       safe-exceptions < 1.8,
                        transformers,
                        prometheus > 0.5.0 && < 2.3.0,
                        raw-strings-qq,
