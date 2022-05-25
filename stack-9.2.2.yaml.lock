@@ -19,23 +19,19 @@ packages:
   original:
     hackage: ekg-core-0.1.1.7
 - completed:
-    name: ekg-prometheus-adapter
-    version: 0.2.0.0
-    git: git@github.com:adinapoli/ekg-prometheus-adapter.git
-    pantry-tree:
-      size: 630
-      sha256: 231133ba19852645e036e29e9fdfe89fb586f51784be270bb200d303a84d1b5b
-    commit: d872fe538d4b1e3587726c784dd6356cc27f5c3f
-  original:
-    git: git@github.com:adinapoli/ekg-prometheus-adapter.git
-    commit: d872fe538d4b1e3587726c784dd6356cc27f5c3f
-- completed:
     hackage: shelly-1.8.2@sha256:570ae1bae6f57439793737159cb70239d89409f4940116d36a2743fab17c8534,5586
     pantry-tree:
       size: 2315
       sha256: 404811e29f4f418f795538a3bc4244def1e0de4834f26ee22d056fc7903fddc2
   original:
     hackage: shelly-1.8.2
+- completed:
+    hackage: ekg-prometheus-adapter-0.1.0.4@sha256:d95487be7f282976cfb23c5b3826eaa1a279aff1e3821b29cf60ad3164e903ab,1494
+    pantry-tree:
+      size: 300
+      sha256: 7879229e738c82a340a9c5584a39771df432ef2e36c62430ee2b4160e2f562cd
+  original:
+    hackage: ekg-prometheus-adapter-0.1.0.4
 snapshots:
 - completed:
     size: 590400
