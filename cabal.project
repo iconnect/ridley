@@ -4,4 +4,10 @@ packages: ridley
 allow-newer:
   katip:time,template-haskell,
   prometheus:base,
-  unliftio-core:base
+  unliftio-core:base,
+  ekg-core:base,
+  ekg-core:ghc-prim,
+  -- Needed only for the non-library only executables
+  superbuffer:bytestring,
+  wai-extra:wai-logger,
+  wai-logger:*

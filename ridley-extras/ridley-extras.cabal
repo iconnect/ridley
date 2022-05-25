@@ -26,7 +26,7 @@ library
                        prometheus < 3,
                        shelly < 1.9.0.0,
                        microlens,
-                       ekg-prometheus-adapter < 0.2.0.0,
+                       ekg-prometheus-adapter < 0.3.0.0,
                        mtl,
                        transformers,
                        ridley >= 0.3.3.0 && < 0.4.0.0

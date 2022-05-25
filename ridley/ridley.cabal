@@ -102,8 +102,10 @@ executable ridley-example
                    , ridley
                    , katip
                    , text
+                   , http-types
+                   , wai
                    , wai-middleware-metrics
-                   , Spock
+                   , warp
                    , microlens
                    , mtl
                    , prometheus
