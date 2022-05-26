@@ -45,7 +45,7 @@ import           Katip
 import           Lens.Micro.TH
 import           Network.Wai.Metrics (WaiMetrics)
 import qualified System.Metrics.Prometheus.MetricId as P
-import qualified System.Metrics.Prometheus.RegistryT as P
+import qualified System.Metrics.Prometheus.Concurrent.RegistryT as P
 import           System.Remote.Monitoring.Prometheus
 import           System.Metrics.Prometheus.Ridley.Types.Internal
 
@@ -210,4 +210,4 @@ instance KatipContext Ridley where
 --------------------------------------------------------------------------------
 runRidley :: RidleyOptions -> LogEnv -> Ridley a -> IO a
 runRidley opts le (Ridley ridley) =
-  (runKatipContextT le (mempty :: SimpleLogPayload) mempty $ P.evalRegistryT $ (runReaderT ridley) opts)
+  (runKatipContextT le (mempty :: SimpleLogPayload) mempty $ P.runRegistryT $ (runReaderT ridley) opts)
