@@ -1,5 +1,5 @@
 name:                ridley
-version:             0.3.3.0
+version:             0.3.3.1
 synopsis:            Quick metrics to grow your app strong.
 description:         A collection of Prometheus metrics to monitor your app. Please see README.md
 homepage:            https://github.com/iconnect/ridley#README
@@ -47,7 +47,7 @@ library
                        time,
                        text >= 1.2.4.0,
                        mtl,
-                       shelly,
+                       shelly >= 1.8.2,
                        safe-exceptions < 1.8,
                        transformers,
                        prometheus > 0.5.0 && < 2.3.0,
@@ -102,8 +102,10 @@ executable ridley-example
                    , ridley
                    , katip
                    , text
+                   , http-types
+                   , wai
                    , wai-middleware-metrics
-                   , Spock
+                   , warp
                    , microlens
                    , mtl
                    , prometheus

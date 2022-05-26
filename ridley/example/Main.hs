@@ -6,27 +6,27 @@ import qualified System.Metrics.Prometheus.Metric.Gauge as P
 import qualified System.Metrics.Prometheus.RegistryT as P
 import           System.Metrics.Prometheus.Ridley.Types
 import           Lens.Micro
-import           Web.Spock
-import           Web.Spock.Config
 import           Network.Wai.Metrics
+import           Network.HTTP.Types (status200)
 import           Control.Exception
 import           Control.Monad.Trans
 import           Data.Time.Clock.POSIX
 import           Katip
 import           System.IO
+import qualified Network.Wai as Wai
+import qualified Network.Wai.Handler.Warp as Warp
 
-spockWeb :: RidleyCtx -> IO ()
-spockWeb ctx = do
-  spockCfg <- defaultSpockCfg () PCNoDatabase ()
-  runSpock 8080 (spock spockCfg (app ctx))
+webApp :: RidleyCtx -> IO ()
+webApp ctx = Warp.run 8080 (app ctx)
 
-app :: RidleyCtx -> SpockCtxM ctx conn sess st ()
+app :: RidleyCtx -> Wai.Application
 app ctx = do
   case ctx ^. ridleyWaiMetrics of
-    Nothing -> return ()
-    Just m  -> middleware (metrics m)
-  get root $ text "Hello World!"
-  get "ping" $ text "pong"
+    Nothing -> myApp
+    Just m  -> (metrics m) myApp
+  where
+    myApp _rq respond =
+      respond $ Wai.responseLBS status200 [] "Hello World"
 
 customExpensiveMetric :: RidleyMetric
 customExpensiveMetric =
@@ -66,4 +66,4 @@ main = do
              & prometheusOptions . samplingFrequency .~ 5
              & dataRetentionPeriod .~ Just 60
              & katipScribes .~ ("RidleyTest", [("stdout", ridleyScribe)])
-    startRidley opts ["metrics"] 8729 >>= spockWeb
+    startRidley opts ["metrics"] 8729 >>= webApp
