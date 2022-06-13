@@ -23,6 +23,7 @@ library
   exposed-modules:
     System.Metrics.Prometheus.Ridley.Metrics.FD
     System.Metrics.Prometheus.Ridley.Metrics.VirtualMemory
+    System.Metrics.Prometheus.Ridley.Metrics.PhysicalMemory
   build-depends:       base >= 4.7 && < 5,
                        text,
                        prometheus < 3,
