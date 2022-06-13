@@ -102,11 +102,11 @@ data FreeGauges =
   }
 
 --------------------------------------------------------------------------------
--- | Returns the virtual memory total and free as sampled from 'vmstat'.
-systemVirtualMemory :: MonadIO m
-                    => RidleyOptions
-                    -> P.RegistryT m RidleyMetricHandler
-systemVirtualMemory opts = do
+-- | Returns the physical memory total and free as sampled from 'free'.
+systemPhysicalMemory :: MonadIO m
+                     => RidleyOptions
+                     -> P.RegistryT m RidleyMetricHandler
+systemPhysicalMemory opts = do
   let popts = opts ^. prometheusOptions
   gauges <- FreeGauges <$> P.registerGauge "free_mem_total_mb" (popts ^. labels)
                        <*> P.registerGauge "free_mem_used_mb" (popts ^. labels)
