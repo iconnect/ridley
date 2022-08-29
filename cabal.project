@@ -11,3 +11,6 @@ allow-newer:
   superbuffer:bytestring,
   wai-extra:wai-logger,
   wai-logger:*
+
+constraints:
+  ekg-prometheus-adapter == 0.1.0.4
