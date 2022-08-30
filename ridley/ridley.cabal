@@ -59,7 +59,8 @@ library
                        ekg-prometheus-adapter >= 0.1.0.3,
                        inline-c,
                        vector,
-                       unix
+                       unix,
+                       unliftio-core
   c-sources:           cbits/helpers.c
   cc-options:          -Wall -std=c99
   default-language:    Haskell2010

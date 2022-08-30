@@ -30,6 +30,8 @@ module System.Metrics.Prometheus.Ridley.Types (
   , katipSeverity
   , dataRetentionPeriod
   , runHandler
+  , ioLogger
+  , getRidleyOptions
   ) where
 
 import           Control.Concurrent (ThreadId)
@@ -211,3 +213,15 @@ instance KatipContext Ridley where
 runRidley :: RidleyOptions -> LogEnv -> Ridley a -> IO a
 runRidley opts le (Ridley ridley) =
   (runKatipContextT le (mempty :: SimpleLogPayload) mempty $ P.evalRegistryT $ (runReaderT ridley) opts)
+
+-- | Returns an IO logger which uses context defined in the 'Ridley' monad. Useful when we want to use
+-- an IO logger in the update functions for the handlers, which run in plain 'IO'.
+ioLogger :: Ridley Logger
+ioLogger = do
+  le  <- getLogEnv
+  ctx <- getKatipContext
+  ns  <- getKatipNamespace
+  pure $ \sev txt -> runKatipContextT le ctx ns $ logLocM sev (ls txt)
+
+getRidleyOptions :: Ridley RidleyOptions
+getRidleyOptions = Ridley ask
