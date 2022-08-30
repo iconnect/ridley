@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-stack runghc --package Spock Main.hs
+cabal v2-run ridley-example

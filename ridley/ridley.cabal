@@ -44,6 +44,7 @@ library
                        wai-middleware-metrics < 0.3.0.0,
                        template-haskell,
                        ekg-core,
+                       exceptions < 0.11,
                        time,
                        text >= 1.2.4.0,
                        mtl,

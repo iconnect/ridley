@@ -32,24 +32,26 @@ module System.Metrics.Prometheus.Ridley.Types (
   , runHandler
   , ioLogger
   , getRidleyOptions
+  , noUpdate
   ) where
 
 import           Control.Concurrent (ThreadId)
+import           Control.Monad.Catch
 import           Control.Monad.IO.Class
 import           Control.Monad.Reader (MonadReader)
-import           Control.Monad.Trans.Class
+import           Control.Monad.State.Strict
 import           Control.Monad.Trans.Reader
-import qualified Data.Set as Set
-import qualified Data.Text as T
 import           Data.Time
 import           GHC.Stack
 import           Katip
 import           Lens.Micro.TH
 import           Network.Wai.Metrics (WaiMetrics)
+import           System.Metrics.Prometheus.Ridley.Types.Internal
+import           System.Remote.Monitoring.Prometheus
+import qualified Data.Set as Set
+import qualified Data.Text as T
 import qualified System.Metrics.Prometheus.MetricId as P
 import qualified System.Metrics.Prometheus.RegistryT as P
-import           System.Remote.Monitoring.Prometheus
-import           System.Metrics.Prometheus.Ridley.Types.Internal
 
 --------------------------------------------------------------------------------
 type Port = Int
@@ -196,6 +198,14 @@ data RidleyCtx = RidleyCtx {
 
 makeLenses ''RidleyCtx
 
+instance MonadThrow Ridley where
+  throwM e = Ridley $ ReaderT $ \_ -> P.RegistryT $ StateT $ \_ -> throwM e
+
+instance MonadCatch Ridley where
+  catch r handler =
+    let unwrap opts = P.unRegistryT . flip runReaderT opts . _unRidley
+    in Ridley $ ReaderT $ \opts -> P.RegistryT $ catch (unwrap opts r) (unwrap opts . handler)
+
 instance Katip Ridley where
   getLogEnv = Ridley $ lift (lift getLogEnv)
   localLogEnv f (Ridley (ReaderT m)) =
@@ -225,3 +235,6 @@ ioLogger = do
 
 getRidleyOptions :: Ridley RidleyOptions
 getRidleyOptions = Ridley ask
+
+noUpdate :: c -> Bool -> IO ()
+noUpdate _ _ = pure ()
