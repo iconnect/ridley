@@ -94,8 +94,9 @@ registerMetrics (x:xs) = do
       $(logTM) sev $ "Registering CustomMetric '" <> fromString (T.unpack metricName) <> "'..."
       (customMetric :) <$> (registerMetrics xs)
     ProcessMemory -> do
+      logger <- ioLogger
       processReservedMemory <- lift $ P.registerGauge "process_memory_kb" (popts ^. labels)
-      let !m = processMemory processReservedMemory
+      let !m = processMemory logger processReservedMemory
       $(logTM) sev "Registering ProcessMemory metric..."
       (m :) <$> (registerMetrics xs)
     CPULoad -> do
@@ -116,9 +117,7 @@ registerMetrics (x:xs) = do
     -- Ignore `Wai` as we will use an external library for that.
     Wai     -> registerMetrics xs
     DiskUsage -> do
-      diskStats <- liftIO getDiskStats
-      dmap   <- lift $ foldM (mkDiskGauge (popts ^. labels)) M.empty diskStats
-      let !diskUsage = diskUsageMetrics dmap
+      diskUsage <- newDiskUsageMetrics
       $(logTM) sev "Registering DiskUsage metric..."
       (diskUsage :) <$> registerMetrics xs
     Network -> do

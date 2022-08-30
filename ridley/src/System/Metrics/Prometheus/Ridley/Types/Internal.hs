@@ -2,8 +2,10 @@
 {-# LANGUAGE ExistentialQuantification #-}
 module System.Metrics.Prometheus.Ridley.Types.Internal
   ( RidleyMetricHandler(..)
+  , Logger
   ) where
 
+import           Katip
 import           GHC.Stack
 import qualified Data.Text as T
 
@@ -21,3 +23,4 @@ data RidleyMetricHandler = forall c. RidleyMetricHandler {
   , _cs          :: CallStack
   }
 
+type Logger = Severity -> T.Text -> IO ()
