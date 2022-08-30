@@ -94,8 +94,9 @@ registerMetrics (x:xs) = do
       $(logTM) sev $ "Registering CustomMetric '" <> fromString (T.unpack metricName) <> "'..."
       (customMetric :) <$> (registerMetrics xs)
     ProcessMemory -> do
+      logger <- ioLogger
       processReservedMemory <- lift $ P.registerGauge "process_memory_kb" (popts ^. labels)
-      let !m = processMemory processReservedMemory
+      let !m = processMemory logger processReservedMemory
       $(logTM) sev "Registering ProcessMemory metric..."
       (m :) <$> (registerMetrics xs)
     CPULoad -> do

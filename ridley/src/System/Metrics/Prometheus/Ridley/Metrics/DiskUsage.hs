@@ -89,15 +89,6 @@ updateDiskUsageMetrics logger dmetrics flush = do
       Nothing -> return ()
       Just m  -> updateDiskUsageMetric m d flush
 
--- | Creates a new 'RidleyMetricHandler' to monitor disk usage.
-newDiskUsageMetrics :: Ridley RidleyMetricHandler
-newDiskUsageMetrics = do
-  logger <- ioLogger
-  opts <- getRidleyOptions
-  diskStats <- liftIO (getDiskStats logger)
-  metrics   <- lift $ foldM (mkDiskGauge (opts ^. prometheusOptions . labels)) M.empty diskStats
-  pure $ mkRidleyMetricHandler "ridley-disk-usage" metrics (updateDiskUsageMetrics logger) False
-
 --------------------------------------------------------------------------------
 mkDiskGauge :: MonadIO m => P.Labels -> DiskUsageMetrics -> DiskStats -> P.RegistryT m DiskUsageMetrics
 mkDiskGauge currentLabels dmap d = do
@@ -107,3 +98,12 @@ mkDiskGauge currentLabels dmap d = do
                        <*> P.registerGauge "disk_free_bytes_blocks" finalLabels
   liftIO $ updateDiskUsageMetric metric d False
   return $! M.insert fs metric $! dmap
+
+-- | Creates a new 'RidleyMetricHandler' to monitor disk usage.
+newDiskUsageMetrics :: Ridley RidleyMetricHandler
+newDiskUsageMetrics = do
+  logger <- ioLogger
+  opts <- getRidleyOptions
+  diskStats <- liftIO (getDiskStats logger)
+  metrics   <- lift $ foldM (mkDiskGauge (opts ^. prometheusOptions . labels)) M.empty diskStats
+  pure $ mkRidleyMetricHandler "ridley-disk-usage" metrics (updateDiskUsageMetrics logger) False
