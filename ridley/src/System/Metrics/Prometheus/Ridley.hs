@@ -3,6 +3,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NumericUnderscores #-}
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE CPP #-}
 module System.Metrics.Prometheus.Ridley (
@@ -31,7 +32,7 @@ import           Control.Concurrent.MVar
 import qualified Control.Exception.Safe as Ex
 import           Control.Monad (foldM)
 import           Control.Monad.IO.Class (liftIO, MonadIO)
-import           Control.Monad.Reader (ask)
+import           Control.Monad.Reader (asks)
 import           Control.Monad.Trans.Class (lift)
 import           Data.IORef
 import qualified Data.List as List
@@ -44,6 +45,7 @@ import           GHC.Conc (getNumCapabilities, getNumProcessors)
 import           GHC.Stack
 import           Katip
 import           Lens.Micro
+import           Lens.Micro.Extras (view)
 import           Network.Wai.Metrics (registerWaiMetrics)
 import           System.Metrics as EKG
 #if (MIN_VERSION_prometheus(0,5,0))
@@ -73,65 +75,110 @@ startRidley opts path port = do
   startRidleyWithStore opts path port store
 
 --------------------------------------------------------------------------------
-registerMetrics :: [RidleyMetric] -> Ridley [RidleyMetricHandler]
-registerMetrics [] = return []
-registerMetrics (x:xs) = do
-  opts <- ask
-  let popts = opts ^. prometheusOptions
-  let sev   = opts ^. katipSeverity
-  le <- getLogEnv
-  case x of
-    CustomMetric metricName mb_timeout custom -> do
-      customMetric <- case mb_timeout of
-        Nothing   -> lift (custom opts)
-        Just microseconds -> do
-          RidleyMetricHandler mtr upd flsh lbl cs <- lift (custom opts)
-          doUpdate <- liftIO $ Auto.mkAutoUpdate Auto.defaultUpdateSettings
-                        { updateAction = upd mtr flsh `Ex.catch` logFailedUpdate le lbl cs
-                        , updateFreq   = microseconds
-                        }
-          pure $ RidleyMetricHandler mtr (\_ _ -> doUpdate) flsh lbl cs
-      $(logTM) sev $ "Registering CustomMetric '" <> fromString (T.unpack metricName) <> "'..."
-      (customMetric :) <$> (registerMetrics xs)
-    ProcessMemory -> do
-      logger <- ioLogger
-      processReservedMemory <- lift $ P.registerGauge "process_memory_kb" (popts ^. labels)
-      let !m = processMemory logger processReservedMemory
-      $(logTM) sev "Registering ProcessMemory metric..."
-      (m :) <$> (registerMetrics xs)
-    CPULoad -> do
-      cpu1m  <- lift $ P.registerGauge "cpu_load1"  (popts ^. labels)
-      cpu5m  <- lift $ P.registerGauge "cpu_load5"  (popts ^. labels)
-      cpu15m <- lift $ P.registerGauge "cpu_load15" (popts ^. labels)
-      let !cpu = processCPULoad (cpu1m, cpu5m, cpu15m)
-      $(logTM) sev "Registering CPULoad metric..."
-      (cpu :) <$> (registerMetrics xs)
-    GHCConc -> do
-      -- We don't want to keep updating this as it's a one-shot measure.
-      numCaps  <- lift $ P.registerCounter "ghc_conc_num_capabilities"  (popts ^. labels)
-      numPros  <- lift $ P.registerCounter "ghc_conc_num_processors"    (popts ^. labels)
-      liftIO (getNumCapabilities >>= \cap -> add (fromIntegral cap) numCaps)
-      liftIO (getNumProcessors >>= \cap -> add (fromIntegral cap) numPros)
-      $(logTM) sev "Registering GHCConc metric..."
-      registerMetrics xs
-    -- Ignore `Wai` as we will use an external library for that.
-    Wai     -> registerMetrics xs
-    DiskUsage -> do
-      diskUsage <- newDiskUsageMetrics
-      $(logTM) sev "Registering DiskUsage metric..."
-      (diskUsage :) <$> registerMetrics xs
-    Network -> do
+registerMetrics :: Set.Set RidleyMetric -> Ridley [RidleyMetricHandler]
+registerMetrics = foldM registerSingleMetric []
+  where
+    registerSingleMetric :: [RidleyMetricHandler] -> RidleyMetric -> Ridley [RidleyMetricHandler]
+    registerSingleMetric !acc x = case x of
+        CustomMetric metricName mb_timeout custom
+          -> tryRegister x acc $ registerCustomMetric metricName mb_timeout custom
+        ProcessMemory
+          -> tryRegister x acc registerProcessMemory
+        CPULoad
+          -> tryRegister x acc registerCPULoad
+        GHCConc
+          -> tryRegister x acc registerGHCConc
+        Wai
+          -> pure acc -- Ignore `Wai` as we will use an external library for that.
+        DiskUsage
+          -> tryRegister x acc registerDiskUsage
+        Network
+          -> tryRegister x acc registerNetworkMetric
+
+tryRegister :: RidleyMetric -> [RidleyMetricHandler] -> Ridley RidleyMetricHandler -> Ridley [RidleyMetricHandler]
+tryRegister metric !acc doRegister = do
+  registrationResult <- Ex.tryAny doRegister
+  case registrationResult of
+    Left ex -> do
+      $(logTM) ErrorS $ ls $ T.pack $ "Registration of metric '" <> show metric <> "' failed due to: " <> show ex
+      pure acc
+    Right metricHandler -> pure $! metricHandler : acc
+
+registerProcessMemory :: Ridley RidleyMetricHandler
+registerProcessMemory = do
+  sev   <- asks (view katipSeverity)
+  popts <- asks (view prometheusOptions)
+  logger <- ioLogger
+  processReservedMemory <- lift $ P.registerGauge "process_memory_kb" (popts ^. labels)
+  let !m = processMemory logger processReservedMemory
+  $(logTM) sev "Registering ProcessMemory metric..."
+  pure m
+
+registerCPULoad :: Ridley RidleyMetricHandler
+registerCPULoad = do
+  sev   <- asks (view katipSeverity)
+  popts <- asks (view prometheusOptions)
+  cpu1m  <- lift $ P.registerGauge "cpu_load1"  (popts ^. labels)
+  cpu5m  <- lift $ P.registerGauge "cpu_load5"  (popts ^. labels)
+  cpu15m <- lift $ P.registerGauge "cpu_load15" (popts ^. labels)
+  let !cpu = processCPULoad (cpu1m, cpu5m, cpu15m)
+  $(logTM) sev "Registering CPULoad metric..."
+  pure cpu
+
+registerGHCConc :: Ridley RidleyMetricHandler
+registerGHCConc = do
+  sev   <- asks (view katipSeverity)
+  popts <- asks (view prometheusOptions)
+  -- We don't want to keep updating this as it's a one-shot measure.
+  numCaps  <- lift $ P.registerCounter "ghc_conc_num_capabilities"  (popts ^. labels)
+  numPros  <- lift $ P.registerCounter "ghc_conc_num_processors"    (popts ^. labels)
+  liftIO (getNumCapabilities >>= \cap -> add (fromIntegral cap) numCaps)
+  liftIO (getNumProcessors >>= \cap -> add (fromIntegral cap) numPros)
+  $(logTM) sev "Registering GHCConc metric..."
+  pure $ mkRidleyMetricHandler "ridley-ghc-conc" (numCaps, numPros) noUpdate False
+
+registerDiskUsage :: Ridley RidleyMetricHandler
+registerDiskUsage = do
+  sev   <- asks (view katipSeverity)
+  diskUsage <- newDiskUsageMetrics
+  $(logTM) sev "Registering DiskUsage metric..."
+  pure diskUsage
+
+registerCustomMetric :: T.Text
+                     -> Maybe Int
+                     -> (forall m. MonadIO m => RidleyOptions -> P.RegistryT m RidleyMetricHandler)
+                     -> Ridley RidleyMetricHandler
+registerCustomMetric metricName mb_timeout custom = do
+  opts    <- getRidleyOptions
+  let sev = opts ^. katipSeverity
+  le      <- getLogEnv
+  customMetric <- case mb_timeout of
+    Nothing   -> lift (custom opts)
+    Just microseconds -> do
+      RidleyMetricHandler mtr upd flsh lbl cs <- lift (custom opts)
+      doUpdate <- liftIO $ Auto.mkAutoUpdate Auto.defaultUpdateSettings
+                    { updateAction = upd mtr flsh `Ex.catch` logFailedUpdate le lbl cs
+                    , updateFreq   = microseconds
+                    }
+      pure $ RidleyMetricHandler mtr (\_ _ -> doUpdate) flsh lbl cs
+  $(logTM) sev $ "Registering CustomMetric '" <> fromString (T.unpack metricName) <> "'..."
+  pure customMetric
+
+registerNetworkMetric :: Ridley RidleyMetricHandler
+registerNetworkMetric = do
+  sev   <- asks (view katipSeverity)
+  popts <- asks (view prometheusOptions)
 #if defined darwin_HOST_OS
-      (ifaces, dtor) <- liftIO getNetworkMetrics
-      imap   <- lift $ foldM (mkInterfaceGauge (popts ^. labels)) M.empty ifaces
-      liftIO dtor
+  (ifaces, dtor) <- liftIO getNetworkMetrics
+  imap   <- lift $ foldM (mkInterfaceGauge (popts ^. labels)) M.empty ifaces
+  liftIO dtor
 #else
-      ifaces <- liftIO getNetworkMetrics
-      imap   <- lift $ foldM (mkInterfaceGauge (popts ^. labels)) M.empty ifaces
+  ifaces <- liftIO getNetworkMetrics
+  imap   <- lift $ foldM (mkInterfaceGauge (popts ^. labels)) M.empty ifaces
 #endif
-      let !network = networkMetrics imap
-      $(logTM) sev "Registering Network metric..."
-      (network :) <$> registerMetrics xs
+  let !network = networkMetrics imap
+  $(logTM) sev "Registering Network metric..."
+  pure network
 
 --------------------------------------------------------------------------------
 startRidleyWithStore :: RidleyOptions
@@ -161,7 +208,7 @@ startRidleyWithStore opts path port store = do
       -- Start the server
       serverLoop <- async $ runRidley opts le' $ do
         lift $ registerEKGStore store (opts ^. prometheusOptions)
-        handlers <- registerMetrics (Set.toList $ opts ^. ridleyMetrics)
+        handlers <- registerMetrics (opts ^. ridleyMetrics)
 
         liftIO $ do
           lastUpdate <- newIORef =<< getCurrentTime
