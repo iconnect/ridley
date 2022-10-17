@@ -54,8 +54,11 @@ data IfData = IfData {
 
 
 #ifdef darwin_HOST_OS
-foreign import ccall "helpers.h free_ridley_if_data"
-  freeRidleyIFData :: Ptr IfData -> CInt -> IO ()
+-- foreign import ccall "helpers.h free_ridley_if_data"
+--   freeRidleyIFData :: Ptr IfData -> CInt -> IO ()
+
+freeRidleyIFData :: Ptr IfData -> CInt -> IO ()
+freeRidleyIFData _ _ = pure ()
 
 instance Storable IfData where
   sizeOf _ = #{size ridley_if_data_t}
