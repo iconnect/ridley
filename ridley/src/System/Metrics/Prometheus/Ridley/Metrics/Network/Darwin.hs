@@ -128,6 +128,9 @@ getNetworkMetrics' = do
        |]
   return (res, totalInterfaces)
 
+foreign import ccall "helpers.h free_ridley_if_data"
+  freeRidleyIFData :: Ptr IfData -> CInt -> IO ()
+
 --------------------------------------------------------------------------------
 getNetworkMetrics :: IO ([IfData], IO ())
 getNetworkMetrics = do
