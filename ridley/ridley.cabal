@@ -1,18 +1,20 @@
 name:                ridley
-version:             0.3.4.0
+version:             0.3.4.1
 synopsis:            Quick metrics to grow your app strong.
 description:         A collection of Prometheus metrics to monitor your app. Please see README.md
 homepage:            https://github.com/iconnect/ridley#README
 license:             BSD3
 license-file:        LICENSE
 author:              Alfredo Di Napoli & the IRIS Connect Engineering Team
-maintainer:          chrisd@irisconnect.co.uk
-copyright:           2022 IRIS Connect Ltd.
+maintainer:          engineering@irisconnect.co.uk
+copyright:           2023 IRIS Connect Ltd.
 category:            Web
 build-type:          Simple
-data-files:
-  include/helpers.h
 cabal-version:       >=1.10
+
+extra-source-files:
+  cbits/helpers.c
+  cbits/helpers.h
 
 flag lib-Werror
      manual: True
@@ -26,7 +28,6 @@ flag library-only
 
 library
   hs-source-dirs:      src
-  include-dirs:        include
   exposed-modules:     System.Metrics.Prometheus.Ridley
                        System.Metrics.Prometheus.Ridley.Types
                        System.Metrics.Prometheus.Ridley.Metrics.Memory
@@ -62,6 +63,7 @@ library
                        vector,
                        unix,
                        unliftio-core
+  include-dirs:        cbits
   c-sources:           cbits/helpers.c
   cc-options:          -Wall -std=c99
   default-language:    Haskell2010
