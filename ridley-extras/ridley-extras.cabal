@@ -1,5 +1,5 @@
 name:                ridley-extras
-version:             0.1.3.0
+version:             0.1.4.0
 synopsis:            Handy metrics that don't belong to ridley.
 description:         See README.md
 homepage:            https://github.com/iconnect/ridley/ridley-extras#readme
@@ -27,6 +27,7 @@ library
   build-depends:       base >= 4.7 && < 5,
                        text,
                        prometheus < 3,
+                       katip < 0.9.0.0,
                        shelly < 1.9.0.0,
                        microlens,
                        ekg-prometheus-adapter < 0.3.0.0,

@@ -1,5 +1,5 @@
 name:                ridley
-version:             0.3.4.1
+version:             0.3.5.0
 synopsis:            Quick metrics to grow your app strong.
 description:         A collection of Prometheus metrics to monitor your app. Please see README.md
 homepage:            https://github.com/iconnect/ridley#README

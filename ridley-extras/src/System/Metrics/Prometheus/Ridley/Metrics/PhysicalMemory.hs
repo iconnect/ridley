@@ -17,6 +17,7 @@ import           System.Metrics.Prometheus.Ridley.Types
 import           System.Posix.Types (ProcessID)
 import           System.Remote.Monitoring.Prometheus (labels)
 import           Text.Read (readMaybe)
+import Control.Monad.Reader
 
 {- Calling 'free' will report
 [service-runner@hermes-devel ~]$ free -k
@@ -103,18 +104,17 @@ data FreeGauges =
 
 --------------------------------------------------------------------------------
 -- | Returns the physical memory total and free as sampled from 'free'.
-systemPhysicalMemory :: MonadIO m
-                     => RidleyOptions
-                     -> P.RegistryT m RidleyMetricHandler
-systemPhysicalMemory opts = do
+systemPhysicalMemory :: Ridley RidleyMetricHandler
+systemPhysicalMemory = do
+  opts <- ask
   let popts = opts ^. prometheusOptions
-  gauges <- FreeGauges <$> P.registerGauge "free_mem_total_mb" (popts ^. labels)
-                       <*> P.registerGauge "free_mem_used_mb" (popts ^. labels)
-                       <*> P.registerGauge "free_mem_free_mb" (popts ^. labels)
-                       <*> P.registerGauge "free_mem_shared_mb" (popts ^. labels)
-                       <*> P.registerGauge "free_mem_buff_cache_mb" (popts ^. labels)
-                       <*> P.registerGauge "free_mem_available_mb" (popts ^. labels)
-                       <*> P.registerGauge "free_swap_total_mb" (popts ^. labels)
-                       <*> P.registerGauge "free_swap_used_mb" (popts ^. labels)
-                       <*> P.registerGauge "free_swap_free_mb" (popts ^. labels)
+  gauges <- lift $ FreeGauges <$> P.registerGauge "free_mem_total_mb" (popts ^. labels)
+                              <*> P.registerGauge "free_mem_used_mb" (popts ^. labels)
+                              <*> P.registerGauge "free_mem_free_mb" (popts ^. labels)
+                              <*> P.registerGauge "free_mem_shared_mb" (popts ^. labels)
+                              <*> P.registerGauge "free_mem_buff_cache_mb" (popts ^. labels)
+                              <*> P.registerGauge "free_mem_available_mb" (popts ^. labels)
+                              <*> P.registerGauge "free_swap_total_mb" (popts ^. labels)
+                              <*> P.registerGauge "free_swap_used_mb" (popts ^. labels)
+                              <*> P.registerGauge "free_swap_free_mb" (popts ^. labels)
   return $ mkRidleyMetricHandler "ridley-physical-memory-statistics" gauges updateFreeStats False

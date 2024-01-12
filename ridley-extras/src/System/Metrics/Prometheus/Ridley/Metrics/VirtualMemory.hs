@@ -5,18 +5,19 @@
 module System.Metrics.Prometheus.Ridley.Metrics.VirtualMemory where
 
 import           Control.Monad.IO.Class
+import           Control.Monad.Reader (ask, lift)
 import           Data.Maybe (fromMaybe, mapMaybe)
 import           Data.Monoid
 import           Data.Word
-import qualified Data.Text as T
 import           Lens.Micro
 import           Shelly
-import qualified System.Metrics.Prometheus.Metric.Gauge as P
-import qualified System.Metrics.Prometheus.RegistryT as P
 import           System.Metrics.Prometheus.Ridley.Types
 import           System.Posix.Types (ProcessID)
 import           System.Remote.Monitoring.Prometheus (labels)
 import           Text.Read (readMaybe)
+import qualified Data.Text as T
+import qualified System.Metrics.Prometheus.Metric.Gauge as P
+import qualified System.Metrics.Prometheus.RegistryT as P
 
 {- Calling 'vmstat' will report
 
@@ -118,19 +119,18 @@ data VmStatGauges =
 
 --------------------------------------------------------------------------------
 -- | Returns the virtual memory total and free as sampled from 'vmstat'.
-systemVirtualMemory :: MonadIO m
-                    => RidleyOptions
-                    -> P.RegistryT m RidleyMetricHandler
-systemVirtualMemory opts = do
+systemVirtualMemory :: Ridley RidleyMetricHandler
+systemVirtualMemory = do
+  opts <- ask
   let popts = opts ^. prometheusOptions
-  gauges <- VmStatGauges <$> P.registerGauge "vmstat_total_memory_mb" (popts ^. labels)
-                         <*> P.registerGauge "vmstat_used_memory_mb" (popts ^. labels)
-                         <*> P.registerGauge "vmstat_active_memory_mb" (popts ^. labels)
-                         <*> P.registerGauge "vmstat_inactive_memory_mb" (popts ^. labels)
-                         <*> P.registerGauge "vmstat_free_memory_mb" (popts ^. labels)
-                         <*> P.registerGauge "vmstat_buffer_memory_mb" (popts ^. labels)
-                         <*> P.registerGauge "vmstat_swap_cache_mb" (popts ^. labels)
-                         <*> P.registerGauge "vmstat_total_swap_mb" (popts ^. labels)
-                         <*> P.registerGauge "vmstat_used_swap_mb" (popts ^. labels)
-                         <*> P.registerGauge "vmstat_free_swap_mb" (popts ^. labels)
+  gauges <- lift $ VmStatGauges <$> P.registerGauge "vmstat_total_memory_mb" (popts ^. labels)
+                                <*> P.registerGauge "vmstat_used_memory_mb" (popts ^. labels)
+                                <*> P.registerGauge "vmstat_active_memory_mb" (popts ^. labels)
+                                <*> P.registerGauge "vmstat_inactive_memory_mb" (popts ^. labels)
+                                <*> P.registerGauge "vmstat_free_memory_mb" (popts ^. labels)
+                                <*> P.registerGauge "vmstat_buffer_memory_mb" (popts ^. labels)
+                                <*> P.registerGauge "vmstat_swap_cache_mb" (popts ^. labels)
+                                <*> P.registerGauge "vmstat_total_swap_mb" (popts ^. labels)
+                                <*> P.registerGauge "vmstat_used_swap_mb" (popts ^. labels)
+                                <*> P.registerGauge "vmstat_free_swap_mb" (popts ^. labels)
   return $ mkRidleyMetricHandler "ridley-virtual-memory-statistics" gauges updateVmStat False
