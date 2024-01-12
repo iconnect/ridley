@@ -19,6 +19,8 @@ import           System.Remote.Monitoring.Prometheus (labels)
 import           Text.Read (readMaybe)
 import Katip.Monadic
 import Data.String
+import Control.Monad.Trans (lift)
+import Control.Monad.Reader (ask)
 
 logAndReturnFDs :: RidleyOptions -> LogEnv -> ProcessID -> [T.Text] -> IO Double
 logAndReturnFDs opts le pid descriptors = do
@@ -58,12 +60,11 @@ updateOpenFD opts le pid gauge _ = do
 
 --------------------------------------------------------------------------------
 -- | Monitors the number of open file descriptors for a given `ProcessID`.
-processOpenFD :: MonadIO m
-              => ProcessID
-              -> RidleyOptions
-              -> LogEnv
-              -> P.RegistryT m RidleyMetricHandler
-processOpenFD pid opts le = do
+processOpenFD :: ProcessID
+              -> Ridley RidleyMetricHandler
+processOpenFD pid = do
+  opts <- ask
+  le   <- getLogEnv
   let popts = opts ^. prometheusOptions
-  openFD <- P.registerGauge "process_open_fd" (popts ^. labels)
+  openFD <- lift $ P.registerGauge "process_open_fd" (popts ^. labels)
   return $ mkRidleyMetricHandler "ridley-process-open-file-descriptors" openFD (updateOpenFD opts le pid) False
