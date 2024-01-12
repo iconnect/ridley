@@ -27,7 +27,7 @@ logAndReturnFDs opts le pid descriptors = do
   let !descriptorsNums = length descriptors
   when (descriptorsNums >= opts ^. openFDWarningTreshold) $
     runRidley opts le $ do
-      $(logTM) WarningS $ fromString $ "Careful, there are a suspiciously high number of open file descriptors for process " <> show pid <> ": " <> T.unpack (T.unlines descriptors)
+      $(logTM) WarningS $ fromString $ "Careful, number of open file descriptors for process " <> show pid <> " exceeded warning threshold (" <> show (opts ^. openFDWarningTreshold) <> "):\n" <> T.unpack (T.unlines descriptors)
   return $ (fromIntegral $ descriptorsNums)
 
 --------------------------------------------------------------------------------
