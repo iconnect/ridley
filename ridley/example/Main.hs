@@ -15,6 +15,7 @@ import           Katip
 import           System.IO
 import qualified Network.Wai as Wai
 import qualified Network.Wai.Handler.Warp as Warp
+import Control.Monad.Reader
 
 webApp :: RidleyCtx -> IO ()
 webApp ctx = Warp.run 8080 (app ctx)
@@ -32,9 +33,10 @@ customExpensiveMetric :: RidleyMetric
 customExpensiveMetric =
   CustomMetric "my-expensive" (Just $ 60 * 1_000_000) get_metric
   where
-    get_metric :: MonadIO m => RidleyOptions -> P.RegistryT m RidleyMetricHandler
-    get_metric opts = do
-        m <- P.registerGauge "current_time" (opts ^. prometheusOptions . labels)
+    get_metric :: Ridley RidleyMetricHandler
+    get_metric = do
+        opts <- ask
+        m <- lift $ P.registerGauge "current_time" (opts ^. prometheusOptions . labels)
         return $ mkRidleyMetricHandler "current_time" m update False
 
     update :: P.Gauge -> Bool -> IO ()
@@ -47,9 +49,10 @@ customCrashfulMetric :: RidleyMetric
 customCrashfulMetric =
   CustomMetric "my-crashful" (Just $ 60 * 1_000_000) get_metric
   where
-    get_metric :: MonadIO m => RidleyOptions -> P.RegistryT m RidleyMetricHandler
-    get_metric opts = do
-        m <- P.registerGauge "crashful" (opts ^. prometheusOptions . labels)
+    get_metric :: Ridley RidleyMetricHandler
+    get_metric = do
+        opts <- ask
+        m <- lift $ P.registerGauge "crashful" (opts ^. prometheusOptions . labels)
         return $ mkRidleyMetricHandler "crashful" m (\_ _ -> throwIO $ userError "CRASH!!") False
 
 main :: IO ()

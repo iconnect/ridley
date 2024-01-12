@@ -87,7 +87,7 @@ data RidleyMetric = ProcessMemory
                                  -- will be updated using Ridley top-level setting,
                                  -- if 'Just' the underlying 'IO' action will be run
                                  -- only every @n@ seconds, or cached otherwise.
-                                 (forall m. MonadIO m => RidleyOptions -> P.RegistryT m RidleyMetricHandler)
+                                 (Ridley RidleyMetricHandler)
                                  -- ^ An action to generate the handler.
                   -- ^ A user-defined metric, identified by a name.
 
@@ -165,8 +165,6 @@ data RidleyOptions = RidleyOptions {
   -- Pass `Nothing` to not flush the metrics.
   }
 
-makeLenses ''RidleyOptions
-
 --------------------------------------------------------------------------------
 defaultMetrics :: [RidleyMetric]
 defaultMetrics = [ProcessMemory, CPULoad, GHCConc, Network, Wai, DiskUsage]
@@ -198,8 +196,6 @@ data RidleyCtx = RidleyCtx {
     _ridleyThreadId   :: ThreadId
   , _ridleyWaiMetrics :: Maybe WaiMetrics
   }
-
-makeLenses ''RidleyCtx
 
 instance MonadThrow Ridley where
   throwM e = Ridley $ ReaderT $ \_ -> P.RegistryT $ StateT $ \_ -> throwM e
@@ -241,3 +237,7 @@ getRidleyOptions = Ridley ask
 
 noUpdate :: c -> Bool -> IO ()
 noUpdate _ _ = pure ()
+
+makeLenses ''RidleyCtx
+makeLenses ''RidleyOptions
+

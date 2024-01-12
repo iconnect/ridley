@@ -144,18 +144,15 @@ registerDiskUsage = do
   $(logTM) sev "Registering DiskUsage metric..."
   pure diskUsage
 
-registerCustomMetric :: T.Text
-                     -> Maybe Int
-                     -> (forall m. MonadIO m => RidleyOptions -> P.RegistryT m RidleyMetricHandler)
-                     -> Ridley RidleyMetricHandler
+registerCustomMetric :: T.Text -> Maybe Int -> Ridley RidleyMetricHandler -> Ridley RidleyMetricHandler
 registerCustomMetric metricName mb_timeout custom = do
   opts    <- getRidleyOptions
   let sev = opts ^. katipSeverity
   le      <- getLogEnv
   customMetric <- case mb_timeout of
-    Nothing   -> lift (custom opts)
+    Nothing   -> custom
     Just microseconds -> do
-      RidleyMetricHandler mtr upd flsh lbl cs <- lift (custom opts)
+      RidleyMetricHandler mtr upd flsh lbl cs <- custom
       doUpdate <- liftIO $ Auto.mkAutoUpdate Auto.defaultUpdateSettings
                     { updateAction = upd mtr flsh `Ex.catch` logFailedUpdate le lbl cs
                     , updateFreq   = microseconds
