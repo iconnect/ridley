@@ -29,6 +29,7 @@ module System.Metrics.Prometheus.Ridley.Types (
   , katipScribes
   , katipSeverity
   , dataRetentionPeriod
+  , openFDWarningTreshold
   , runHandler
   , ioLogger
   , getRidleyOptions
@@ -159,6 +160,7 @@ data RidleyOptions = RidleyOptions {
   , _katipScribes :: (Katip.Namespace, [(T.Text, Katip.Scribe)])
   , _katipSeverity :: Katip.Severity
   , _dataRetentionPeriod :: Maybe NominalDiffTime
+  , _openFDWarningTreshold :: !Int
   -- ^ How much to retain the data, in seconds.
   -- Pass `Nothing` to not flush the metrics.
   }
@@ -179,6 +181,7 @@ newOptions appLabels metrics = RidleyOptions {
   , _katipSeverity     = InfoS
   , _katipScribes      = mempty
   , _dataRetentionPeriod = Nothing
+  , _openFDWarningTreshold = 100
   }
 
 --------------------------------------------------------------------------------
