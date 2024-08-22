@@ -1,4 +1,4 @@
-resolver: lts-14.27
+resolver: lts-21.22
 # ghc-options:
 #   ridley: -Wall -Werror
 packages:

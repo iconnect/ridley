@@ -1,5 +1,5 @@
 name:                ridley
-version:             0.3.5.0
+version:             0.4.0.0
 synopsis:            Quick metrics to grow your app strong.
 description:         A collection of Prometheus metrics to monitor your app. Please see README.md
 homepage:            https://github.com/iconnect/ridley#README
@@ -7,10 +7,11 @@ license:             BSD3
 license-file:        LICENSE
 author:              Alfredo Di Napoli & the IRIS Connect Engineering Team
 maintainer:          engineering@irisconnect.co.uk
-copyright:           2023 IRIS Connect Ltd.
+copyright:           2024 IRIS Connect Ltd.
 category:            Web
 build-type:          Simple
 cabal-version:       >=1.10
+tested-with:         GHC == 9.4.7 || == 9.4.8 || == 9.6.4
 
 extra-source-files:
   cbits/helpers.c
@@ -30,12 +31,22 @@ library
   hs-source-dirs:      src
   exposed-modules:     System.Metrics.Prometheus.Ridley
                        System.Metrics.Prometheus.Ridley.Types
-                       System.Metrics.Prometheus.Ridley.Metrics.Memory
-                       System.Metrics.Prometheus.Ridley.Metrics.DiskUsage
                        System.Metrics.Prometheus.Ridley.Metrics.CPU
+                       System.Metrics.Prometheus.Ridley.Metrics.DiskUsage
+                       System.Metrics.Prometheus.Ridley.Metrics.FD
+                       System.Metrics.Prometheus.Ridley.Metrics.Memory
                        System.Metrics.Prometheus.Ridley.Metrics.Network
                        System.Metrics.Prometheus.Ridley.Metrics.Network.Types
+                       System.Metrics.Prometheus.Ridley.Metrics.PhysicalMemory
+                       System.Metrics.Prometheus.Ridley.Metrics.VirtualMemory
   other-modules:       System.Metrics.Prometheus.Ridley.Types.Internal
+  if os(darwin)
+    c-sources:         src/System/Metrics/Prometheus/Ridley/Metrics/CPU/Darwin.c
+    other-modules:     System.Metrics.Prometheus.Ridley.Metrics.Network.Darwin
+                       System.Metrics.Prometheus.Ridley.Metrics.CPU.Darwin
+  else
+    other-modules:     System.Metrics.Prometheus.Ridley.Metrics.Network.Unix
+                       System.Metrics.Prometheus.Ridley.Metrics.CPU.Unix
 
   build-depends:       async < 3.0.0,
                        auto-update >= 0.1,
@@ -58,7 +69,7 @@ library
                        microlens-th,
                        process,
                        string-conv,
-                       ekg-prometheus-adapter >= 0.1.0.3,
+                       ekg-prometheus-adapter >= 0.1.0.5,
                        inline-c,
                        vector,
                        unix,
@@ -69,13 +80,6 @@ library
   default-language:    Haskell2010
   if flag(lib-Werror)
     ghc-options: -Wall -Werror
-  if os(darwin)
-    c-sources:         src/System/Metrics/Prometheus/Ridley/Metrics/CPU/Darwin.c
-    other-modules:     System.Metrics.Prometheus.Ridley.Metrics.Network.Darwin
-                       System.Metrics.Prometheus.Ridley.Metrics.CPU.Darwin
-  else
-    other-modules:     System.Metrics.Prometheus.Ridley.Metrics.Network.Unix
-                       System.Metrics.Prometheus.Ridley.Metrics.CPU.Unix
 
 test-suite ridley-test
   type:                exitcode-stdio-1.0

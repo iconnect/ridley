@@ -1,5 +1,4 @@
-packages: ridley
-          ridley-extras
+packages: .
 
 allow-newer:
   katip:time,template-haskell,
@@ -13,4 +12,4 @@ allow-newer:
   wai-logger:*
 
 constraints:
-  ekg-prometheus-adapter == 0.1.0.4
+  ekg-prometheus-adapter == 0.1.0.5

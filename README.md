@@ -16,8 +16,8 @@ By default, with minimal configuration, this is what you get by default:
 * Disk Usage
 * Network Usage
 * Wai endpoints status codes
-
-On top of that, it's possible to define custom metrics so you can embed your own in your monitored programs. A collection
-of optional metrics can be found in the complementary package `ridley-extras`, which adds things like:
-
 * Open file descriptors
+* Virtual Memory
+* Physical Memory
+
+On top of that, it's possible to define custom metrics so you can embed your own in your monitored programs.

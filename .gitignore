@@ -22,3 +22,4 @@ tags
 dist-newstyle
 hie.yaml
 cabal.project.local
+.DS_Store
