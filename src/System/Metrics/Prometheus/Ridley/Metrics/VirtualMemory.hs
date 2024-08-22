@@ -4,15 +4,12 @@
 {-# LANGUAGE TypeApplications #-}
 module System.Metrics.Prometheus.Ridley.Metrics.VirtualMemory where
 
-import           Control.Monad.IO.Class
 import           Control.Monad.Reader (ask, lift)
-import           Data.Maybe (fromMaybe, mapMaybe)
-import           Data.Monoid
+import           Data.Maybe (mapMaybe)
 import           Data.Word
 import           Lens.Micro
 import           Shelly
 import           System.Metrics.Prometheus.Ridley.Types
-import           System.Posix.Types (ProcessID)
 import           System.Remote.Monitoring.Prometheus (labels)
 import           Text.Read (readMaybe)
 import qualified Data.Text as T

@@ -4,9 +4,6 @@
 {-# LANGUAGE BangPatterns      #-}
 module System.Metrics.Prometheus.Ridley.Metrics.FD where
 
-import           Control.Monad.IO.Class
-import           Data.Maybe (fromMaybe)
-import           Data.Monoid
 import qualified Data.Text as T
 import           Lens.Micro
 import           Shelly
@@ -16,7 +13,6 @@ import qualified System.Metrics.Prometheus.RegistryT as P
 import           System.Metrics.Prometheus.Ridley.Types
 import           System.Posix.Types (ProcessID)
 import           System.Remote.Monitoring.Prometheus (labels)
-import           Text.Read (readMaybe)
 import Katip.Monadic
 import Data.String
 import Control.Monad.Trans (lift)

@@ -4,7 +4,6 @@ allow-newer: false
 flags: {}
 packages:
 - 'ridley'
-- 'ridley-extras'
 system-ghc: false
 extra-deps:
 - ekg-prometheus-adapter-0.1.0.4@sha256:d95487be7f282976cfb23c5b3826eaa1a279aff1e3821b29cf60ad3164e903ab,1494
