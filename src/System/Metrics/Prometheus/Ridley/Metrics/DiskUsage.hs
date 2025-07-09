@@ -3,7 +3,18 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
 module System.Metrics.Prometheus.Ridley.Metrics.DiskUsage (
-  newDiskUsageMetrics
+  -- * Types
+    DiskStats(..)
+  , Logger
+  , Severity(..)
+
+  -- * Handlers
+  , newDiskUsageMetrics
+
+  -- * Utility functions
+  , getDiskStats
+  , diskUsedPercent
+  , diskFreePercent
   ) where
 
 import           Control.Monad
@@ -28,9 +39,11 @@ import qualified System.Metrics.Prometheus.RegistryT as P
 
 --------------------------------------------------------------------------------
 data DiskStats = DiskStats {
-    _diskFilesystem :: T.Text
-  , _diskUsed       :: Double
-  , _diskFree       :: Double
+    _diskFilesystem  :: !T.Text
+  , _diskUsedBytes   :: !Double
+  , _diskUsedPercent :: !Int
+  , _diskFreeBytes   :: !Double
+  , _diskFreePercent :: !Int
   } deriving Show
 
 makeLenses ''DiskStats
@@ -57,27 +70,44 @@ getDiskStats logger = do
       pure mempty
   where
     mkDiskStats :: T.Text -> Maybe DiskStats
-    mkDiskStats rawLine = case T.words rawLine of
+    mkDiskStats rawLine = do
+     (fs, used, free) <- case T.words rawLine of
 #ifdef darwin_HOST_OS
-     [fs,_, used,free,_,_,_,_,_] -> DiskStats <$> pure fs
-                                              <*> readMaybe (T.unpack used)
-                                              <*> readMaybe (T.unpack free)
+       [fs,_, used,free,_,_,_,_,_] -> do
+         usedBytes <- readMaybe (T.unpack used)
+         freeBytes <- readMaybe (T.unpack free)
+         pure (fs, usedBytes, freeBytes)
 #else
-     -- On Linux, `df` shows less things by default, example
-     -- Filesystem     1K-blocks     Used Available Use% Mounted on
-     -- /dev/xvda1      52416860 27408532  25008328  53% /
-     [fs,_, used,free,_,_] -> DiskStats <$> pure fs
-                                        <*> readMaybe (T.unpack used)
-                                        <*> readMaybe (T.unpack free)
+       -- On Linux, `df` shows less things by default, example
+       -- Filesystem     1K-blocks     Used Available Use% Mounted on
+       -- /dev/xvda1      52416860 27408532  25008328  53% /
+       [fs,_, used,free,_,_] -> do
+         usedBytes <- readMaybe (T.unpack used)
+         freeBytes <- readMaybe (T.unpack free)
+         pure (fs, usedBytes, freeBytes)
 #endif
-     _ -> Nothing
+       _                     -> Nothing
+
+     let usedPercent = computeUsedPercent used free
+     pure $ DiskStats {
+                _diskFilesystem  = fs
+              , _diskUsedBytes   = used
+              , _diskUsedPercent = usedPercent
+              , _diskFreeBytes   = free
+              , _diskFreePercent = 100 - usedPercent
+              }
+
+computeUsedPercent :: Double -> Double -> Int
+computeUsedPercent usedBytes freeBytes =
+  let totalBytes = usedBytes + freeBytes
+  in round $ (100.0 * usedBytes) / totalBytes
 
 --------------------------------------------------------------------------------
 -- | As this is a gauge, it makes no sense flushing it.
 updateDiskUsageMetric :: DiskMetric -> DiskStats -> Bool -> IO ()
 updateDiskUsageMetric DiskMetric{..} d _ = do
-  P.set (d ^. diskUsed) _dskMetricUsed
-  P.set (d ^. diskFree) _dskMetricFree
+  P.set (d ^. diskUsedBytes) _dskMetricUsed
+  P.set (d ^. diskFreeBytes) _dskMetricFree
 
 --------------------------------------------------------------------------------
 updateDiskUsageMetrics :: Logger -> DiskUsageMetrics -> Bool -> IO ()
