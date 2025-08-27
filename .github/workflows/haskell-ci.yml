@@ -170,6 +170,7 @@ jobs:
           echo "    ghc-options: -Werror=incomplete-patterns -Werror=incomplete-uni-patterns" >> cabal.project
           cat >> cabal.project <<EOF
           constraints: ekg-prometheus-adapter == 0.1.0.5
+          constraints: katip <0.8.8.3 || >0.8.8.3
           allow-newer: katip:time
           allow-newer: template-haskell
           allow-newer: prometheus:base
