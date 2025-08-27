@@ -68,12 +68,9 @@ library
                        microlens,
                        microlens-th,
                        process,
-                       string-conv,
                        ekg-prometheus-adapter >= 0.1.0.5,
                        inline-c,
                        vector,
-                       unix,
-                       unliftio-core
   include-dirs:        cbits
   c-sources:           cbits/helpers.c
   cc-options:          -Wall -std=c99
