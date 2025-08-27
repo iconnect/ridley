@@ -64,13 +64,15 @@ library
                        safe-exceptions < 1.8,
                        transformers,
                        prometheus > 0.5.0 && < 2.4.0,
-                       raw-strings-qq,
                        microlens,
                        microlens-th,
                        process,
                        ekg-prometheus-adapter >= 0.1.0.5,
                        inline-c,
                        vector,
+                       unix
+  if os(darwin)
+      build-depends:   raw-strings-qq
   include-dirs:        cbits
   c-sources:           cbits/helpers.c
   cc-options:          -Wall -std=c99
