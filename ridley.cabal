@@ -89,7 +89,6 @@ test-suite ridley-test
                      , ridley
                      , tasty
                      , tasty-hunit
-                     , tasty-quickcheck
                      , ekg-core
                      , prometheus
                      , containers
