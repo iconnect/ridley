@@ -30,7 +30,7 @@ import           Control.Concurrent (threadDelay, forkIO)
 import           Control.Concurrent.Async
 import           Control.Concurrent.MVar
 import qualified Control.Exception.Safe as Ex
-import           Control.Monad (foldM)
+import           Control.Monad (foldM, when)
 import           Control.Monad.IO.Class (liftIO, MonadIO)
 import           Control.Monad.Reader (asks)
 import           Control.Monad.Trans.Class (lift)
@@ -173,6 +173,10 @@ registerNetworkMetric = do
   ifaces <- liftIO getNetworkMetrics
   imap   <- lift $ foldM (mkInterfaceGauge (popts ^. labels)) M.empty ifaces
 #endif
+  -- Log diagnostic information about network interfaces (using ErrorS to ensure visibility in CI)
+  $(logTM) ErrorS $ ls $ "Network metrics: Found " <> T.pack (show (length ifaces)) <> " interfaces"
+  when (List.null ifaces) $ do
+    $(logTM) ErrorS "Network metrics: No network interfaces found - metrics will be empty (common in containerized environments)"
   let !network = networkMetrics imap
   $(logTM) sev "Registering Network metric..."
   pure network
