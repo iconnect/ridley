@@ -62,7 +62,8 @@ getDiskStats :: Logger -> IO [DiskStats]
 getDiskStats logger = do
   let diskOnly = (\d -> "/dev" `T.isInfixOf` (d ^. diskFilesystem))
   let dropHeader = drop 1 . T.lines . T.strip . T.pack
-  (exitCode, rawLines, errors) <- readProcessWithExitCode "df" [] []
+  -- Use awk to deduplicate by filesystem (first column) for btrfs/zfs systems
+  (exitCode, rawLines, errors) <- readProcessWithExitCode "sh" ["-c", "df | awk '!seen[$1]++'"] []
   case exitCode of
     ExitSuccess    -> return $ filter diskOnly . mapMaybe mkDiskStats $ dropHeader rawLines
     ExitFailure ec -> do
