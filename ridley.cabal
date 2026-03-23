@@ -11,7 +11,7 @@ copyright:           2024 IRIS Connect Ltd.
 category:            Web
 build-type:          Simple
 cabal-version:       >=1.10
-tested-with:         GHC == 9.4.7 || == 9.4.8 || == 9.6.6
+tested-with:         GHC == 9.4.7 || == 9.4.8 || == 9.6.6 || == 9.10.2
 
 extra-source-files:
   cbits/helpers.c
@@ -63,17 +63,16 @@ library
                        shelly >= 1.8.2,
                        safe-exceptions < 1.8,
                        transformers,
-                       prometheus > 0.5.0 && < 2.3.0,
-                       raw-strings-qq,
+                       prometheus > 0.5.0 && < 2.4.0,
                        microlens,
                        microlens-th,
                        process,
-                       string-conv,
                        ekg-prometheus-adapter >= 0.1.0.5,
                        inline-c,
                        vector,
-                       unix,
-                       unliftio-core
+                       unix
+  if os(darwin)
+      build-depends:   raw-strings-qq
   include-dirs:        cbits
   c-sources:           cbits/helpers.c
   cc-options:          -Wall -std=c99
@@ -90,7 +89,6 @@ test-suite ridley-test
                      , ridley
                      , tasty
                      , tasty-hunit
-                     , tasty-quickcheck
                      , ekg-core
                      , prometheus
                      , containers

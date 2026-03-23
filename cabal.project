@@ -12,4 +12,8 @@ allow-newer:
   wai-logger:*
 
 constraints:
-  ekg-prometheus-adapter == 0.1.0.5
+  ekg-prometheus-adapter == 0.1.0.5,
+
+  -- katip 0.8.8.3 does not build with GHC 9.6 or below.
+  -- See: https://github.com/Soostone/katip/pull/160
+  katip <0.8.8.3 || >0.8.8.3,
