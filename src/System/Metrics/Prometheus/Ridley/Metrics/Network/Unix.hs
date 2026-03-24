@@ -25,20 +25,8 @@ import           System.Metrics.Prometheus.Ridley.Types
 -- | Parse /proc/net/dev to get the relevant stats.
 getNetworkMetrics :: IO [IfData]
 getNetworkMetrics = do
-  rawContent <- T.readFile "/proc/net/dev"
-  let allLines = T.lines . T.strip $ rawContent
-  let interfaces = drop 2 allLines
-  let parsed = mapMaybe mkInterface interfaces
-  
-  -- Debug logging for CI troubleshooting (using stderr for visibility)
-  IO.hPutStrLn IO.stderr $ "[DEBUG] Network metrics: /proc/net/dev has " <> show (length allLines) <> " total lines"
-  IO.hPutStrLn IO.stderr $ "[DEBUG] Network metrics: After dropping header, " <> show (length interfaces) <> " interface lines to parse"
-  IO.hPutStrLn IO.stderr $ "[DEBUG] Network metrics: Successfully parsed " <> show (length parsed) <> " interfaces"
-  when (null parsed) $ do
-    IO.hPutStrLn IO.stderr "[DEBUG] Network metrics: No interfaces parsed! Raw /proc/net/dev content:"
-    IO.hPutStrLn IO.stderr $ T.unpack rawContent
-  
-  return $! parsed
+  interfaces <- drop 2 . T.lines . T.strip <$> T.readFile "/proc/net/dev"
+  return $! mapMaybe mkInterface interfaces
   where
     mkInterface :: T.Text -> Maybe IfData
     mkInterface rawLine = case T.words . T.strip $ rawLine of
