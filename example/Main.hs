@@ -3,7 +3,7 @@
 {-# LANGUAGE CPP #-}
 import           System.Metrics.Prometheus.Ridley
 import qualified System.Metrics.Prometheus.Metric.Gauge as P
-import qualified System.Metrics.Prometheus.RegistryT as P
+import qualified System.Metrics.Prometheus.Concurrent.RegistryT as P
 import           System.Metrics.Prometheus.Ridley.Types
 import           Lens.Micro
 import           Network.Wai.Metrics

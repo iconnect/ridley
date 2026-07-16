@@ -33,6 +33,7 @@ module System.Metrics.Prometheus.Ridley.Types (
   , runHandler
   , ioLogger
   , getRidleyOptions
+  , getRidleyRegistry
   , noUpdate
   ) where
 
@@ -40,7 +41,7 @@ import           Control.Concurrent (ThreadId)
 import           Control.Monad.Catch
 import           Control.Monad.IO.Class
 import           Control.Monad.Reader (MonadReader)
-import           Control.Monad.State.Strict
+import           Control.Monad.Trans.Class (MonadTrans, lift)
 import           Control.Monad.Trans.Reader
 import           Data.Time
 import           GHC.Stack
@@ -51,8 +52,9 @@ import           System.Metrics.Prometheus.Ridley.Types.Internal
 import           System.Remote.Monitoring.Prometheus
 import qualified Data.Set as Set
 import qualified Data.Text as T
+import qualified System.Metrics.Prometheus.Concurrent.Registry as PC
+import qualified System.Metrics.Prometheus.Concurrent.RegistryT as P
 import qualified System.Metrics.Prometheus.MetricId as P
-import qualified System.Metrics.Prometheus.RegistryT as P
 
 --------------------------------------------------------------------------------
 type Port = Int
@@ -198,12 +200,13 @@ data RidleyCtx = RidleyCtx {
   }
 
 instance MonadThrow Ridley where
-  throwM e = Ridley $ ReaderT $ \_ -> P.RegistryT $ StateT $ \_ -> throwM e
+  throwM e = Ridley $ ReaderT $ \_ -> P.RegistryT $ ReaderT $ \_ -> throwM e
 
 instance MonadCatch Ridley where
   catch r handler =
-    let unwrap opts = P.unRegistryT . flip runReaderT opts . _unRidley
-    in Ridley $ ReaderT $ \opts -> P.RegistryT $ catch (unwrap opts r) (unwrap opts . handler)
+    let unwrap opts reg = flip runReaderT reg . P.unRegistryT . flip runReaderT opts . _unRidley
+    in Ridley $ ReaderT $ \opts -> P.RegistryT $ ReaderT $ \reg ->
+         catch (unwrap opts reg r) (unwrap opts reg . handler)
 
 instance Katip Ridley where
   getLogEnv = Ridley $ lift (lift getLogEnv)
@@ -221,7 +224,7 @@ instance KatipContext Ridley where
 --------------------------------------------------------------------------------
 runRidley :: RidleyOptions -> LogEnv -> Ridley a -> IO a
 runRidley opts le (Ridley ridley) =
-  (runKatipContextT le (mempty :: SimpleLogPayload) mempty $ P.evalRegistryT $ (runReaderT ridley) opts)
+  (runKatipContextT le (mempty :: SimpleLogPayload) mempty $ P.runRegistryT $ (runReaderT ridley) opts)
 
 -- | Returns an IO logger which uses context defined in the 'Ridley' monad. Useful when we want to use
 -- an IO logger in the update functions for the handlers, which run in plain 'IO'.
@@ -234,6 +237,12 @@ ioLogger = do
 
 getRidleyOptions :: Ridley RidleyOptions
 getRidleyOptions = Ridley ask
+
+-- | Returns the underlying (concurrent) Prometheus registry. Metric handlers
+-- can hold on to it to register new metrics dynamically, after Ridley has
+-- booted (e.g. to self-heal from a failed registration at startup).
+getRidleyRegistry :: Ridley PC.Registry
+getRidleyRegistry = Ridley $ lift $ P.RegistryT ask
 
 noUpdate :: c -> Bool -> IO ()
 noUpdate _ _ = pure ()

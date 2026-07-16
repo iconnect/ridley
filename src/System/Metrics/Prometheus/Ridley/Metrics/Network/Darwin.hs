@@ -22,7 +22,7 @@ import           Foreign.Storable
 import qualified Language.C.Inline as C
 import qualified System.Metrics.Prometheus.Metric.Gauge as P
 import qualified System.Metrics.Prometheus.MetricId as P
-import qualified System.Metrics.Prometheus.RegistryT as P
+import qualified System.Metrics.Prometheus.Concurrent.RegistryT as P
 import           System.Metrics.Prometheus.Ridley.Metrics.Network.Types
 import           System.Metrics.Prometheus.Ridley.Types
 import           Text.RawString.QQ (r)

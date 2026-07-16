@@ -17,7 +17,7 @@ import           Prelude hiding (FilePath)
 import qualified System.IO as IO
 import qualified System.Metrics.Prometheus.Metric.Gauge as P
 import qualified System.Metrics.Prometheus.MetricId as P
-import qualified System.Metrics.Prometheus.RegistryT as P
+import qualified System.Metrics.Prometheus.Concurrent.RegistryT as P
 import           System.Metrics.Prometheus.Ridley.Metrics.Network.Types
 import           System.Metrics.Prometheus.Ridley.Types
 
