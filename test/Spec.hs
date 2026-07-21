@@ -8,19 +8,20 @@ import           Control.Concurrent
 import           Control.Exception
 import           Control.Monad
 import           Data.ByteString.Lazy (ByteString)
+import           Data.IORef
 import           Data.List
-import qualified Data.Map.Strict as Map
 import           Data.Maybe (isJust)
 import           Data.Monoid
 import           Data.Ord
 import           Data.String.Conv
-import qualified Data.Text as T
 import           Lens.Micro
+import qualified Data.Map.Strict as Map
+import qualified Data.Text as T
 import qualified Network.HTTP.Client as HTTP
 import           System.IO.Unsafe (unsafePerformIO)
 import           System.Metrics as EKG
-import           Data.IORef
-import           System.Metrics.Prometheus.Registry
+import           System.Metrics.Prometheus.Concurrent.Registry
+import           System.Metrics.Prometheus.Registry (unRegistrySample)
 import           System.Metrics.Prometheus.Ridley
 import           System.Metrics.Prometheus.Ridley.Metrics.DiskUsage
 import           System.Metrics.Prometheus.Ridley.Types
