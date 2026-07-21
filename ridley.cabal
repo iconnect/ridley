@@ -56,7 +56,6 @@ library
                        wai-middleware-metrics < 0.3.0.0,
                        template-haskell,
                        ekg-core,
-                       unordered-containers,
                        exceptions < 0.11,
                        time,
                        text >= 1.2.4.0,
@@ -108,7 +107,6 @@ executable ridley-example
                    , time
                    , ridley
                    , katip
-                   , text
                    , http-types
                    , random
                    , wai
