@@ -62,8 +62,7 @@ import           System.Metrics.Prometheus.Ridley.Metrics.Memory
 import           System.Metrics.Prometheus.Ridley.Metrics.Network
 import           System.Metrics.Prometheus.Ridley.Types
 import           System.Metrics.Prometheus.Ridley.Types.Internal
-import           System.Metrics.Prometheus.Ridley.EKG (registerEKGStore)
-import           System.Remote.Monitoring.Prometheus hiding (registerEKGStore)
+import           System.Remote.Monitoring.Prometheus
 
 --------------------------------------------------------------------------------
 startRidley :: RidleyOptions
@@ -206,7 +205,7 @@ startRidleyWithStore opts path port store = do
       -- Start the server
       serverLoop <- async $ runRidley opts le' $ do
         registry <- getRidleyRegistry
-        registerEKGStore store (opts ^. prometheusOptions) registry
+        liftIO $ registerEKGStore' store (opts ^. prometheusOptions) registry
         handlers <- registerMetrics (opts ^. ridleyMetrics)
 
         liftIO $ do

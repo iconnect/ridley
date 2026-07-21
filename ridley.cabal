@@ -31,7 +31,6 @@ library
   hs-source-dirs:      src
   exposed-modules:     System.Metrics.Prometheus.Ridley
                        System.Metrics.Prometheus.Ridley.Types
-                       System.Metrics.Prometheus.Ridley.EKG
                        System.Metrics.Prometheus.Ridley.Metrics.CPU
                        System.Metrics.Prometheus.Ridley.Metrics.DiskUsage
                        System.Metrics.Prometheus.Ridley.Metrics.FD
