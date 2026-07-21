@@ -11,8 +11,13 @@ allow-newer:
   wai-extra:wai-logger,
   wai-logger:*
 
+source-repository-package
+  type: git
+  location: https://github.com/adinapoli/ekg-prometheus-adapter.git
+  tag: 2e10809c6e26b0bf0387d4cfe98ec400cfc5f5d5
+
 constraints:
-  ekg-prometheus-adapter == 0.1.0.5,
+  ekg-prometheus-adapter == 0.2.0.0,
 
   -- katip 0.8.8.3 does not build with GHC 9.6 or below.
   -- See: https://github.com/Soostone/katip/pull/160

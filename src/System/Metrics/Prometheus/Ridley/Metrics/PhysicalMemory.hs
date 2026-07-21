@@ -10,7 +10,7 @@ import qualified Data.Text as T
 import           Lens.Micro
 import           Shelly
 import qualified System.Metrics.Prometheus.Metric.Gauge as P
-import qualified System.Metrics.Prometheus.RegistryT as P
+import qualified System.Metrics.Prometheus.Concurrent.RegistryT as P
 import           System.Metrics.Prometheus.Ridley.Types
 import           System.Remote.Monitoring.Prometheus (labels)
 import           Text.Read (readMaybe)

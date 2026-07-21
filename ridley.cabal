@@ -1,5 +1,5 @@
 name:                ridley
-version:             0.4.0.1
+version:             0.5.0.0
 synopsis:            Quick metrics to grow your app strong.
 description:         A collection of Prometheus metrics to monitor your app. Please see README.md
 homepage:            https://github.com/iconnect/ridley#README
@@ -11,7 +11,7 @@ copyright:           2024 IRIS Connect Ltd.
 category:            Web
 build-type:          Simple
 cabal-version:       >=1.10
-tested-with:         GHC == 9.4.7 || == 9.4.8 || == 9.6.6 || == 9.10.2
+tested-with:         GHC == 9.6.7 || == 9.10.3 || == 9.12.4
 
 extra-source-files:
   cbits/helpers.c
@@ -67,7 +67,7 @@ library
                        microlens,
                        microlens-th,
                        process,
-                       ekg-prometheus-adapter >= 0.1.0.5,
+                       ekg-prometheus-adapter >= 0.2.0.0,
                        inline-c,
                        vector,
                        unix
@@ -107,8 +107,8 @@ executable ridley-example
                    , time
                    , ridley
                    , katip
-                   , text
                    , http-types
+                   , random
                    , wai
                    , wai-middleware-metrics
                    , warp

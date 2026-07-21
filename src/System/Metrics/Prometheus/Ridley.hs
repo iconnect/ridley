@@ -54,7 +54,7 @@ import qualified System.Metrics.Prometheus.Http.Scrape as P
 import qualified System.Metrics.Prometheus.Concurrent.Http as P
 #endif
 import           System.Metrics.Prometheus.Metric.Counter (add)
-import qualified System.Metrics.Prometheus.RegistryT as P
+import qualified System.Metrics.Prometheus.Concurrent.RegistryT as P
 import           System.Metrics.Prometheus.Registry (RegistrySample)
 import           System.Metrics.Prometheus.Ridley.Metrics.CPU
 import           System.Metrics.Prometheus.Ridley.Metrics.DiskUsage
@@ -204,7 +204,8 @@ startRidleyWithStore opts path port store = do
 
       -- Start the server
       serverLoop <- async $ runRidley opts le' $ do
-        lift $ registerEKGStore store (opts ^. prometheusOptions)
+        registry <- getRidleyRegistry
+        liftIO $ registerEKGStore' store (opts ^. prometheusOptions) registry
         handlers <- registerMetrics (opts ^. ridleyMetrics)
 
         liftIO $ do
