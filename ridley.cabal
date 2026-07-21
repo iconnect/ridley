@@ -110,6 +110,7 @@ executable ridley-example
                    , katip
                    , text
                    , http-types
+                   , random
                    , wai
                    , wai-middleware-metrics
                    , warp
