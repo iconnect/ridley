@@ -33,6 +33,7 @@ import           System.Remote.Monitoring.Prometheus (labels)
 import           Text.Read hiding (lift)
 import qualified Control.Exception.Safe as Ex
 import qualified Data.Map.Strict as M
+import qualified Data.Set as Set
 import qualified Data.Text as T
 import qualified System.Metrics.Prometheus.Concurrent.Registry as PC
 import qualified System.Metrics.Prometheus.Metric.Gauge as P
@@ -64,11 +65,14 @@ getDiskStats :: Logger -> IO [DiskStats]
 getDiskStats logger = do
   let diskOnly = (\d -> "/dev" `T.isInfixOf` (d ^. diskFilesystem))
   let dropHeader = drop 1 . T.lines . T.strip . T.pack
-  -- Use awk to deduplicate by filesystem (first column) for btrfs/zfs systems.
-  -- pipefail ensures a failure of df is not masked by awk succeeding.
-  (exitCode, rawLines, errors) <- readProcessWithExitCode "sh" ["-c", "set -o pipefail; df | awk '!seen[$1]++'"] []
+  -- Run df directly, without an intermediate shell: /bin/sh is dash on
+  -- Debian/Ubuntu, which does not support `set -o pipefail` and made this
+  -- fail unconditionally. Deduplication by filesystem (for btrfs/zfs
+  -- systems, where one device appears under several mount points) is done
+  -- in dedupByFilesystem below.
+  (exitCode, rawLines, errors) <- readProcessWithExitCode "df" [] []
   case exitCode of
-    ExitSuccess    -> return $ filter diskOnly . mapMaybe mkDiskStats $ dropHeader rawLines
+    ExitSuccess    -> return $ filter diskOnly . dedupByFilesystem . mapMaybe mkDiskStats $ dropHeader rawLines
     ExitFailure ec -> do
       logger ErrorS $ "getDiskStats exited with error code " <> T.pack (show ec) <> ": " <> T.pack errors
       pure mempty
@@ -100,6 +104,17 @@ getDiskStats logger = do
               , _diskFreeBytes   = free
               , _diskFreePercent = 100 - usedPercent
               }
+
+-- | Keep only the first 'DiskStats' for each filesystem: on btrfs/zfs the
+-- same device is reported by df once per subvolume/mount point.
+dedupByFilesystem :: [DiskStats] -> [DiskStats]
+dedupByFilesystem = go Set.empty
+  where
+    go _ [] = []
+    go seen (d:ds)
+      | fs `Set.member` seen = go seen ds
+      | otherwise            = d : go (Set.insert fs seen) ds
+      where fs = d ^. diskFilesystem
 
 computeUsedPercent :: Double -> Double -> Int
 computeUsedPercent usedBytes freeBytes =
