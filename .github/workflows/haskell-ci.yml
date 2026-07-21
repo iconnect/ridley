@@ -8,14 +8,16 @@
 #
 # For more information, see https://github.com/haskell-CI/haskell-ci
 #
-# version: 0.19.20250722
+# version: 0.19.20260624
 #
-# REGENDATA ("0.19.20250722",["github","cabal.project"])
+# REGENDATA ("0.19.20260624",["github","cabal.project"])
 #
 name: Haskell-CI
 on:
   - push
   - pull_request
+  - merge_group
+  - workflow_dispatch
 jobs:
   linux:
     name: Haskell-CI - Linux - ${{ matrix.compiler }}
@@ -28,24 +30,19 @@ jobs:
     strategy:
       matrix:
         include:
-          - compiler: ghc-9.10.2
+          - compiler: ghc-9.12.4
             compilerKind: ghc
-            compilerVersion: 9.10.2
+            compilerVersion: 9.12.4
             setup-method: ghcup
             allow-failure: false
-          - compiler: ghc-9.6.6
+          - compiler: ghc-9.10.3
             compilerKind: ghc
-            compilerVersion: 9.6.6
+            compilerVersion: 9.10.3
             setup-method: ghcup
             allow-failure: false
-          - compiler: ghc-9.4.8
+          - compiler: ghc-9.6.7
             compilerKind: ghc
-            compilerVersion: 9.4.8
-            setup-method: ghcup
-            allow-failure: false
-          - compiler: ghc-9.4.7
-            compilerKind: ghc
-            compilerVersion: 9.4.7
+            compilerVersion: 9.6.7
             setup-method: ghcup
             allow-failure: false
       fail-fast: false
@@ -61,8 +58,8 @@ jobs:
           chmod a+x "$HOME/.ghcup/bin/ghcup"
       - name: Install cabal-install
         run: |
-          "$HOME/.ghcup/bin/ghcup" install cabal 3.14.2.0 || (cat "$HOME"/.ghcup/logs/*.* && false)
-          echo "CABAL=$HOME/.ghcup/bin/cabal-3.14.2.0 -vnormal+nowrap" >> "$GITHUB_ENV"
+          "$HOME/.ghcup/bin/ghcup" install cabal 3.16.0.0 || (cat "$HOME"/.ghcup/logs/*.* && false)
+          echo "CABAL=$HOME/.ghcup/bin/cabal-3.16.0.0 -vnormal+nowrap" >> "$GITHUB_ENV"
       - name: Install GHC (GHCup)
         if: matrix.setup-method == 'ghcup'
         run: |
@@ -138,7 +135,7 @@ jobs:
           chmod a+x $HOME/.cabal/bin/cabal-plan
           cabal-plan --version
       - name: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: source
       - name: initial cabal.project for sdist
@@ -169,7 +166,7 @@ jobs:
           echo "package ridley" >> cabal.project
           echo "    ghc-options: -Werror=incomplete-patterns -Werror=incomplete-uni-patterns" >> cabal.project
           cat >> cabal.project <<EOF
-          constraints: ekg-prometheus-adapter == 0.1.0.5
+          constraints: ekg-prometheus-adapter == 0.2.0.0
           constraints: katip <0.8.8.3 || >0.8.8.3
           allow-newer: katip:time
           allow-newer: template-haskell
@@ -180,6 +177,11 @@ jobs:
           allow-newer: superbuffer:bytestring
           allow-newer: wai-extra:wai-logger
           allow-newer: wai-logger:*
+
+          source-repository-package
+            type:     git
+            location: https://github.com/adinapoli/ekg-prometheus-adapter.git
+            tag:      2e10809c6e26b0bf0387d4cfe98ec400cfc5f5d5
           EOF
           $HCPKG list --simple-output --names-only | perl -ne 'for (split /\s+/) { print "constraints: any.$_ installed\n" unless /^(ridley)$/; }' >> cabal.project.local
           cat cabal.project
@@ -189,7 +191,7 @@ jobs:
           $CABAL v2-build $ARG_COMPILER $ARG_TESTS $ARG_BENCH --dry-run all
           cabal-plan
       - name: restore cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with:
           key: ${{ runner.os }}-${{ matrix.compiler }}-${{ github.sha }}
           path: ~/.cabal/store
@@ -220,7 +222,7 @@ jobs:
           $CABAL v2-build $ARG_COMPILER --disable-tests --disable-benchmarks all
       - name: save cache
         if: always()
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         with:
           key: ${{ runner.os }}-${{ matrix.compiler }}-${{ github.sha }}
           path: ~/.cabal/store
